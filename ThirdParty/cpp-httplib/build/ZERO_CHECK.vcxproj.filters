@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\WorkSpace\ParsingJsonData\ThirdParty\cpp-httplib\build\CMakeFiles\303bd44efe9bef55b40a0f3245d29ee7\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="D:\WorkSpace\ParsingJsonData\ThirdParty\cpp-httplib\cmake\FindBrotli.cmake">
+      <Filter>Buildsystem Input Files\cmake</Filter>
+    </None>
+    <None Include="D:\WorkSpace\ParsingJsonData\ThirdParty\cpp-httplib\httplibConfig.cmake.in">
+      <Filter>Buildsystem Input Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{FB8FD8F4-01FA-3F94-8990-4D9855DFE7FE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{C1DF3518-B62B-3632-B876-66BE0BAD1C34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Buildsystem Input Files">
+      <UniqueIdentifier>{837A6274-59F5-350C-B26A-21B1305E128C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Buildsystem Input Files\cmake">
+      <UniqueIdentifier>{6F7B6693-B641-31D2-8716-2EF678E793F1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
