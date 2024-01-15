@@ -69,7 +69,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>.\ThirdParty\jsoncpp\include;.\ThirdParty\cpp-httplib;.\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\WorkSpace\ParsingJsonData\ThirdParty\jsoncpp\build\lib\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>.\ThirdParty\jsoncpp\out\build\x64-Release\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>

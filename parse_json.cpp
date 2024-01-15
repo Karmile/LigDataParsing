@@ -21,18 +21,11 @@ int main() {
         cout << res->body.c_str();
         try {
             if (reader.parse(res->body.c_str(),res->body.c_str() + rawJsonLength, root)) {
-                // 遍
-                // 历JSON数组并将站点信息存储到结构体中
-                if (root.empty()) {
-                    std::cout << " failed" << endl;
-                }
-                else {
-                    std::cout << " success" << endl;
-                }
+                // 遍历JSON数组并将站点信息存储到结构体中
                 std::vector<StationInfo> sites;
                 for (const auto& item : root) {
                     StationInfo site;
-                    site.stationID = item["StationID"].asInt();
+                    site.stationID = item["stationID"].asInt();
                     site.name = item["name"].asString();
                     site.latitude = item["latitude"].asDouble();
                     site.longitude = item["longitude"].asDouble();
@@ -41,9 +34,9 @@ int main() {
                     site.FreeDiskSpace = item["FreeDiskSpace"].asInt();
                     site.isDeleted = item["isDeleted"].asBool();
                     site.gpsTime = item["GPSTime"].asString();
+                    site.id = item["id"].asInt();
                     sites.push_back(site);
                 }
-
                 // 打印获取的站点信息
                 for (const auto& site : sites) {
                     std::cout << "Name: " << site.name << std::endl;

@@ -1,0 +1,19 @@
+# ninja log v5
+28	482	7269904983394739	src/test_lib_json/CMakeFiles/jsoncpp_test.dir/fuzz.cpp.obj	5a0b6c2cd0cb6025
+23	552	7269904984062505	src/jsontestrunner/CMakeFiles/jsontestrunner_exe.dir/main.cpp.obj	513698e2c26bd163
+21	656	7269904985079108	src/lib_json/CMakeFiles/jsoncpp_object.dir/json_writer.cpp.obj	be997c16c77a04d8
+18	673	7269904985148896	src/lib_json/CMakeFiles/jsoncpp_object.dir/json_value.cpp.obj	ea5ecdbcc444f5ad
+13	690	7269904985348217	src/lib_json/CMakeFiles/jsoncpp_static.dir/json_writer.cpp.obj	2fc019bbd25d2f3d
+11	695	7269904985447880	src/lib_json/CMakeFiles/jsoncpp_static.dir/json_value.cpp.obj	127d2f0fd2227a99
+9	708	7269904985557507	src/lib_json/CMakeFiles/jsoncpp_static.dir/json_reader.cpp.obj	cba4b23681d66330
+6	713	7269904985677104	src/lib_json/CMakeFiles/jsoncpp_lib.dir/json_writer.cpp.obj	5ebd4251706bcf1c
+25	714	7269904985697037	src/test_lib_json/CMakeFiles/jsoncpp_test.dir/jsontest.cpp.obj	788bdcd8d27ff4a7
+16	714	7269904985677104	src/lib_json/CMakeFiles/jsoncpp_object.dir/json_reader.cpp.obj	413a9e12664d7afa
+4	722	7269904985786734	src/lib_json/CMakeFiles/jsoncpp_lib.dir/json_value.cpp.obj	5f14a713789f32ed
+2	723	7269904985806671	src/lib_json/CMakeFiles/jsoncpp_lib.dir/json_reader.cpp.obj	1faf7ebe183d47cc
+31	882	7269904987351499	src/test_lib_json/CMakeFiles/jsoncpp_test.dir/main.cpp.obj	2518b4754607f29
+708	1163	7269904988576281	lib/jsoncpp_static.lib	f248f72c82a64e4e
+723	1854	7269904996020136	bin/jsoncpp.dll	42ed0a2f1e10c34b
+723	1854	7269904996020136	lib/jsoncpp.lib	42ed0a2f1e10c34b
+1854	2711	7269905004900629	bin/jsontestrunner_exe.exe	c8d8108b0ffb0abf
+1857	2913	7269905005943785	bin/jsoncpp_test.exe	9a726a7337791e80

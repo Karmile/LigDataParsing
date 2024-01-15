@@ -1,0 +1,2 @@
+#pragma code_page(65001)
+1 /* CREATEPROCESS_MANIFEST_RESOURCE_ID */ 24 /* RT_MANIFEST */ "D:/WorkSpace/test/LigDataParsing/ThirdParty/jsoncpp/out/build/x64-Debug/src/test_lib_json/CMakeFiles/jsoncpp_test.dir/embed.manifest"
