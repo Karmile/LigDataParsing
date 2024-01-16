@@ -1,16 +1,27 @@
 #include <iostream>
 #include <json/json.h>
 #include <httplib.h>
-#include <DataStruct.h>
+#include "yaml-cpp/yaml.h"
+#include "pugixml.hpp"
+#include"parse_json.h"
 
+
+
+Parser::Parser(const std::string str) {
+    try {
+        config_ = YAML::LoadFile(str);
+        std::cout << "load config successfully!\n"  << endl;
+    }
+    catch (const YAML::Exception& e) {
+        std::cerr << e.what() << "\n";
+        return ;
+    }
+}
 // 定义结构体来存储站点信息
-
-
-int main() {
-    // 发起HTTPS请求获取站点信息
-    httplib::Client client("http://112.26.166.27:18000");
-    auto res = client.Get("/getDetectionNetworkStatesApi");
-
+void Parser::parse_station_json(std::vector<StationInfo>& sites){
+    cout << config_["sites"]["url"].as<string>();
+    httplib::Client client(config_["sites"]["url"].as<string>());
+    auto res = client.Get(config_["sites"]["api"].as<string>());
     if (res && res->status == 200) {
         // 解析JSON响应
         JSONCPP_STRING err;
@@ -20,14 +31,13 @@ int main() {
         const auto rawJsonLength = static_cast<int>(res->body.length());
         cout << res->body.c_str();
         try {
-            if (reader.parse(res->body.c_str(),res->body.c_str() + rawJsonLength, root)) {
+            if (reader.parse(res->body.c_str(), res->body.c_str() + rawJsonLength, root)) {
                 // 遍历JSON数组并将站点信息存储到结构体中
-                std::vector<StationInfo> sites;
                 for (const auto& item : root) {
                     StationInfo site;
                     site.stationID = item["stationID"].asInt();
-                    site.name = item["name"].asString();
                     site.latitude = item["latitude"].asDouble();
+                    site.name = static_cast<string>( item["name"].asString());
                     site.longitude = item["longitude"].asDouble();
                     site.altitude = item["altitude"].asDouble();
                     site.TotalDiskSpace = item["TotalDiskSpace"].asInt();
@@ -35,6 +45,7 @@ int main() {
                     site.isDeleted = item["isDeleted"].asBool();
                     site.gpsTime = item["GPSTime"].asString();
                     site.id = item["id"].asInt();
+                    site.GPSIsValid = item["GPSIsValid"].asBool();
                     sites.push_back(site);
                 }
                 // 打印获取的站点信息
@@ -48,13 +59,52 @@ int main() {
                 std::cerr << "Failed to parse JSON response" << std::endl;
                 std::cout << " :" << ":" << std::endl;
             }
-        }catch (const Json::Exception& e) {
+        }
+        catch (const Json::Exception& e) {
             // 捕获其他 Json::Exception 异常
             std::cout << "解析异常: " << e.what() << std::endl;
         }
-    } else {
+    }
+    else {
         std::cout << "HTTP request failed" << std::endl;
     }
-
-    return 0;
 }
+
+void Parser::parse_trigger_json(std::vector<TriggerInfo>& triggers) {
+    httplib::Client client(config_["trigger"]["url"].as<string>());
+    auto res = client.Get(config_["trigger"]["api"].as<string>());
+    if (res && res->status == 200) {
+
+        // 解析 HTML
+        pugi::xml_document doc;
+        doc.load_string(res->body.c_str());
+        Json::Value root;
+        Json::Reader reader;
+        // 查找所有的 div 标签，并提取数据
+        for (auto div : doc.select_nodes("//div[@class='data-item']")) {
+            std::string data_str = div.node().child_value();
+            // 解析 JSON 数据
+            try {
+                if (reader.parse(data_str, root)) {
+                    // 遍历JSON数组并将站点信息存储到结构体中
+                    TriggerInfo trigger;
+                    trigger.stationID = stoi(root[7].asString());
+                    trigger.ActPointSec = stod(root[6].asString());
+                    trigger.Mean = stoi(root[8].asString());
+                    trigger.Value = stoi(root[9].asString());
+                    trigger.time = GPSTime(stoi(root[0].asString()), stoi(root[1].asString()), stoi(root[2].asString()),
+                        stoi(root[3].asString()), stoi(root[4].asString()), stoi(root[5].asString()), stod(root[6].asString()));
+                    triggers.push_back(trigger);
+                }
+                else {
+                    std::cerr << "Failed to parse JSON response" << std::endl;
+                }
+            }
+            catch (const Json::Exception& e) {
+                // 捕获其他 Json::Exception 异常
+                std::cout << "parsing fault!: " << e.what() << std::endl;
+            }
+        }
+    }
+}
+

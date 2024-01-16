@@ -68,8 +68,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>.\ThirdParty\jsoncpp\include;.\ThirdParty\cpp-httplib;.\include;$(IncludePath)</IncludePath>
-    <LibraryPath>.\ThirdParty\jsoncpp\out\build\x64-Release\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>.\ThirdParty\jsoncpp\include;.\ThirdParty\cpp-httplib;.\include;.\ThirdParty\yaml-cpp\include;.\ThirdParty\pugixml-1.14\src;$(IncludePath)</IncludePath>
+    <LibraryPath>.\ThirdParty\jsoncpp\out\build\x64-Debug\lib;.\ThirdParty\yaml-cpp\lib;.\ThirdParty\pugixml-1.14\out\build\x64-Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -92,11 +92,12 @@
       <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>jsoncpp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>jsoncpp.lib;yaml-cppd.lib;pugixml.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -124,7 +125,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="parse_json.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="parse_json.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

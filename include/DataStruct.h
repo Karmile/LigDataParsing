@@ -16,7 +16,7 @@ struct GPSTime
 		m_ActPointSec = 0;
 	}
 
-	GPSTime(int input_Year, int input_Month, int input_Day, int input_Hour, int input_Min, int input_Sec, double input_ActPointSec, bool isTimeVaild, bool isTimeConfirm)
+	GPSTime(int input_Year, int input_Month, int input_Day, int input_Hour, int input_Min, int input_Sec, double input_ActPointSec, bool isTimeVaild = true, bool isTimeConfirm = true)
 	{
 		m_isTimeVaild = isTimeVaild;
 		m_isTimeConfirm = isTimeConfirm;
@@ -78,8 +78,15 @@ struct StationInfo {
   double longitude;
   double altitude;
   string gpsTime;
-  int GPSIsValid;
+  bool GPSIsValid;
   int TotalDiskSpace;
   int FreeDiskSpace;
   bool isDeleted;
+};
+struct TriggerInfo {
+	GPSTime time;
+	double ActPointSec;
+	int stationID;
+	int Mean;
+	int Value;
 };
