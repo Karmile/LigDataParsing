@@ -39,6 +39,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -68,8 +69,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>.\ThirdParty\jsoncpp\include;.\ThirdParty\cpp-httplib;.\include;.\ThirdParty\yaml-cpp\include;.\ThirdParty\pugixml-1.14\src;$(IncludePath)</IncludePath>
-    <LibraryPath>.\ThirdParty\jsoncpp\out\build\x64-Debug\lib;.\ThirdParty\yaml-cpp\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>.\ThirdParty\jsoncpp\include;.\ThirdParty\LigLocCuda3Dx64\include;.\ThirdParty\cpp-httplib;.\include;.\ThirdParty\yaml-cpp\include;.\ThirdParty\pugixml-1.14\src;$(IncludePath)</IncludePath>
+    <LibraryPath>.\ThirdParty\jsoncpp\out\build\x64-Debug\lib;.\ThirdParty\LigLocCuda3Dx64\libs;.\ThirdParty\yaml-cpp\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -97,7 +98,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>jsoncpp.lib;yaml-cppd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>jsoncpp.lib;yaml-cppd.lib;cudart.lib;LigLocCuda3Dx64d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -125,11 +126,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="LocStruct.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="parse_json.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GPSTimeAlgorithm.h" />
+    <ClInclude Include="LocStruct.h" />
+    <ClInclude Include="Params.h" />
     <ClInclude Include="parse_json.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="config.yaml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

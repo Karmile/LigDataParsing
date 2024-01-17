@@ -1,3 +1,4 @@
+#pragma once
 #include<string>
 
 using namespace std;
@@ -70,6 +71,7 @@ struct GPSTime
 	int m_Sec;
 	double m_ActPointSec;
 };
+
 struct StationInfo {
   int id;
   int stationID;
@@ -83,10 +85,73 @@ struct StationInfo {
   int FreeDiskSpace;
   bool isDeleted;
 };
+
 struct TriggerInfo {
 	GPSTime time;
 	int ActPointSec;
 	int stationID;
 	int Mean;
 	int Value;
+};
+
+
+struct GPSTimeInformation {
+	GPSTimeInformation()
+	{
+		memset(m_currentTimeStr, 0, 256);
+		m_timeIsProcess = false;
+		m_currentTime = GPSTime();
+		m_currentSecondCacheCount = 0;
+		m_currentSeconfCachePlace = 0;
+	}
+	GPSTime m_currentTime;
+	char m_currentTimeStr[256];
+	unsigned int m_currentSecondCacheCount;
+	unsigned int m_currentSeconfCachePlace;
+
+	bool m_timeIsProcess;  //cannot use the GPS time, When this parameter is on, you could wait;
+};
+
+struct DiskState
+{
+	double   TotalDiskSpace;
+	double   FreeDiskSpace;
+	double   UsedDiskSpace;
+};
+
+struct ClientState
+{
+	int StationID;
+	char stationName[32];
+
+	GPSTimeInformation CurrentGPSTimeInformation;
+	GPSTime GPSCurrentTime;
+
+	double GPSCurrentLocationLat;
+	double GPSCurrentLocationLon;
+
+	bool  detectionThreadIsOn;
+	bool  GPSSearchThreadIsOn;
+	bool  fileProcThreadIsOn;
+	bool  readPortThreadIsOn;
+	bool  GPSSynchronizationThreadIsOn;
+
+	bool isDAQStart;
+
+	int   GPSSynchronizationErrorFlagCount;
+	int   GPSReadPortErrorFlagCount;
+	double GPSPointsBetweenTwoEvent;
+
+	unsigned int GPSSecondCacheCount;
+	unsigned int GPSSecondCachePlace;
+
+	DiskState diskState;
+};
+
+struct TriggerPointInformation
+{
+	int StationID;
+	GPSTime PointTime;
+	unsigned int Mean;
+	unsigned int Value;
 };
