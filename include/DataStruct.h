@@ -85,7 +85,7 @@ struct StationInfo {
 };
 struct TriggerInfo {
 	GPSTime time;
-	double ActPointSec;
+	int ActPointSec;
 	int stationID;
 	int Mean;
 	int Value;

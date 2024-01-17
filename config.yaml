@@ -4,3 +4,5 @@ sites:
 trigger: 
   url: "http://112.26.166.27:18000"
   api: "/getRealTimeTrigger/str/10"
+  #http://222.195.83.28:18000/getRealTimeTrigger/str/10
+  #http://112.26.166.27/

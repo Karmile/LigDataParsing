@@ -2,7 +2,6 @@
 #include <json/json.h>
 #include <httplib.h>
 #include "yaml-cpp/yaml.h"
-#include "pugixml.hpp"
 #include"parse_json.h"
 
 
@@ -74,27 +73,23 @@ void Parser::parse_trigger_json(std::vector<TriggerInfo>& triggers) {
     httplib::Client client(config_["trigger"]["url"].as<string>());
     auto res = client.Get(config_["trigger"]["api"].as<string>());
     if (res && res->status == 200) {
-
-        // 解析 HTML
-        pugi::xml_document doc;
-        doc.load_string(res->body.c_str());
         Json::Value root;
         Json::Reader reader;
-        // 查找所有的 div 标签，并提取数据
-        for (auto div : doc.select_nodes("//div[@class='data-item']")) {
-            std::string data_str = div.node().child_value();
             // 解析 JSON 数据
             try {
-                if (reader.parse(data_str, root)) {
-                    // 遍历JSON数组并将站点信息存储到结构体中
-                    TriggerInfo trigger;
-                    trigger.stationID = stoi(root[7].asString());
-                    trigger.ActPointSec = stod(root[6].asString());
-                    trigger.Mean = stoi(root[8].asString());
-                    trigger.Value = stoi(root[9].asString());
-                    trigger.time = GPSTime(stoi(root[0].asString()), stoi(root[1].asString()), stoi(root[2].asString()),
-                        stoi(root[3].asString()), stoi(root[4].asString()), stoi(root[5].asString()), stod(root[6].asString()));
-                    triggers.push_back(trigger);
+                if (reader.parse(res->body.c_str(), root)) {
+                    for (const auto& item : root) {
+                        // 遍历JSON数组并将站点信息存储到结构体中
+                        TriggerInfo trigger;
+                        trigger.stationID = stoi(item[7].asString());
+                        trigger.ActPointSec = stoi(item[6].asString());
+                        trigger.Mean = stoi(item[8].asString());
+                        trigger.Value = stoi(item[9].asString());
+                        trigger.time = GPSTime(stoi(item[0].asString()), stoi(item[1].asString()), stoi(item[2].asString()),
+                            stoi(item[3].asString()), stoi(item[4].asString()), stoi(item[5].asString()), stoi(item[6].asString()));
+                        triggers.push_back(trigger);
+                    }
+                    cout << "The number of trigger info obtained: "<< root.size();
                 }
                 else {
                     std::cerr << "Failed to parse JSON response" << std::endl;
@@ -104,7 +99,7 @@ void Parser::parse_trigger_json(std::vector<TriggerInfo>& triggers) {
                 // 捕获其他 Json::Exception 异常
                 std::cout << "parsing fault!: " << e.what() << std::endl;
             }
-        }
+        
     }
 }
 
