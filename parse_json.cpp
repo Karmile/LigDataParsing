@@ -2,7 +2,8 @@
 #include <json/json.h>
 #include <httplib.h>
 #include "yaml-cpp/yaml.h"
-#include"parse_json.h"
+#include "parse_json.h"
+#include "chrono"
 
 
 
@@ -15,10 +16,24 @@ Parser::Parser(const std::string str) {
         std::cerr << e.what() << "\n";
         return ;
     }
+    sites_ = {};
+    allTriggers_ = {};
+}
+
+void Parser::Parse( bool get) {
+    int count{ 0 };
+    while (get)
+    {
+        parse_station_json();
+        parse_trigger_json();
+        count++;
+        cout << "current number of cycles:  " << count << endl << endl;
+        //10s 读取一次数据
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+    }
 }
 // 定义结构体来存储站点信息
-void Parser::parse_station_json(std::vector<StationInfo>& sites){
-    cout << config_["sites"]["url"].as<string>();
+void Parser::parse_station_json(){
     httplib::Client client(config_["sites"]["url"].as<string>());
     auto res = client.Get(config_["sites"]["api"].as<string>());
     if (res && res->status == 200) {
@@ -28,9 +43,9 @@ void Parser::parse_station_json(std::vector<StationInfo>& sites){
         Json::Reader reader;
         //Json::Reader reader;
         const auto rawJsonLength = static_cast<int>(res->body.length());
-        cout << res->body.c_str();
         try {
             if (reader.parse(res->body.c_str(), res->body.c_str() + rawJsonLength, root)) {
+                sites_.clear();
                 // 遍历JSON数组并将站点信息存储到结构体中
                 for (const auto& item : root) {
                     StationInfo site;
@@ -45,14 +60,14 @@ void Parser::parse_station_json(std::vector<StationInfo>& sites){
                     site.gpsTime = item["GPSTime"].asString();
                     site.id = item["id"].asInt();
                     site.GPSIsValid = item["GPSIsValid"].asBool();
-                    sites.push_back(site);
+                    sites_.push_back(site);
                 }
                 // 打印获取的站点信息
-                for (const auto& site : sites) {
-                    std::cout << "Name: " << site.name << std::endl;
-                    std::cout << "StationID: " << site.stationID << std::endl;
-                    std::cout << std::endl;
+                for (const auto& site : sites_) {
+                    std::cout << "Name: " << site.name;
+                    std::cout << "   StationID: " << site.stationID << std::endl;
                 }
+                std::cout << "current quantity of sites:  " << sites_.size() << std::endl << endl;
             }
             else {
                 std::cerr << "Failed to parse JSON response" << std::endl;
@@ -69,7 +84,7 @@ void Parser::parse_station_json(std::vector<StationInfo>& sites){
     }
 }
 
-void Parser::parse_trigger_json(std::vector<TriggerInfo>& triggers) {
+void Parser::parse_trigger_json() {
     httplib::Client client(config_["trigger"]["url"].as<string>());
     auto res = client.Get(config_["trigger"]["api"].as<string>());
     if (res && res->status == 200) {
@@ -78,6 +93,7 @@ void Parser::parse_trigger_json(std::vector<TriggerInfo>& triggers) {
             // 解析 JSON 数据
             try {
                 if (reader.parse(res->body.c_str(), root)) {
+                    allTriggers_.clear();
                     for (const auto& item : root) {
                         // 遍历JSON数组并将站点信息存储到结构体中
                         TriggerInfo trigger;
@@ -87,9 +103,9 @@ void Parser::parse_trigger_json(std::vector<TriggerInfo>& triggers) {
                         trigger.Value = stoi(item[9].asString());
                         trigger.time = GPSTime(stoi(item[0].asString()), stoi(item[1].asString()), stoi(item[2].asString()),
                             stoi(item[3].asString()), stoi(item[4].asString()), stoi(item[5].asString()), stoi(item[6].asString()));
-                        triggers.push_back(trigger);
+                        allTriggers_.push_back(trigger);
                     }
-                    cout << "The number of trigger info obtained: "<< root.size();
+                    cout << "current quantity of trigger info obtained: " << allTriggers_.size() << endl << endl;
                 }
                 else {
                     std::cerr << "Failed to parse JSON response" << std::endl;

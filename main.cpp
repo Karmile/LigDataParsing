@@ -2,6 +2,7 @@
 #include "iostream"
 #include "GPSTimeAlgorithm.h"
 #include "LocStruct.h"
+#include <thread>
 
 using namespace std;
 
@@ -9,17 +10,19 @@ int main() {
     // 发起HTTPS请求获取站点信息
     std::string str = (".\\config.yaml");
     Parser parser(str);
-
+    
     vector<StationInfo> sites;
     vector<TriggerInfo> allTriggers;
+    bool GET{ true };
+    thread loader([&]() {
+        parser.Parse(GET);
+        });
+    sites = parser.GetStationData();
+    allTriggers = parser.GetTriggersData();
 
-    parser.parse_station_json(sites);
-    parser.parse_trigger_json(allTriggers);
-
-
-	int nCount = allTriggers.size();
-	int curLoopIdx = 0;
-
+    int nCount = allTriggers.size();
+    int curLoopIdx = 0;
+    
 	//double endTime = CGPSTimeAlgorithm::GetGPSTimeFromHour(allTriggers.back().m_time);
 //
 //	while (allTriggers.size())
@@ -136,6 +139,6 @@ int main() {
 //		allTriggers.front().releaseData();
 //		allTriggers.erase(allTriggers.begin());
 //	}
-
+    loader.join();
     return 0;
 }

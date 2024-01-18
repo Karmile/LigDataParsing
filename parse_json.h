@@ -7,10 +7,18 @@ class Parser
 {
 public:
 	Parser(const std::string str );
-
-	void parse_station_json(std::vector<StationInfo>& sites);
-	void parse_trigger_json(std::vector<TriggerInfo>& triggers);
+	void Parse(bool get = true);
+	inline const vector<StationInfo>& GetStationData() {
+		return sites_;
+	}
+	inline const vector<TriggerInfo>& GetTriggersData() {
+		return allTriggers_;
+	}
 private:
 	YAML::Node config_;
+	vector<StationInfo> sites_;
+	vector<TriggerInfo> allTriggers_; 
+	void parse_station_json();
+	void parse_trigger_json();
 };
 
