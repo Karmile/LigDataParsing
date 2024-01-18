@@ -16,7 +16,6 @@ int main() {
     parser.parse_station_json(sites);
     parser.parse_trigger_json(allTriggers);
 
-
 	int nCount = allTriggers.size();
 	int curLoopIdx = 0;
 

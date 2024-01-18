@@ -132,6 +132,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GPSTimeAlgorithm.h" />
+    <ClInclude Include="include\DataStruct.h" />
     <ClInclude Include="LocStruct.h" />
     <ClInclude Include="Params.h" />
     <ClInclude Include="parse_json.h" />

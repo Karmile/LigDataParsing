@@ -50,6 +50,16 @@ struct GPSTime
 			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour == s2.m_Hour) && (s1.m_Min == s2.m_Min) && (s1.m_Sec < s2.m_Sec))
 			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour == s2.m_Hour) && (s1.m_Min == s2.m_Min) && (s1.m_Sec == s2.m_Sec) && (s1.m_ActPointSec < s2.m_ActPointSec));
 	}
+	friend bool operator> (const GPSTime& s1, const GPSTime& s2)
+	{
+		return((s1.m_Year > s2.m_Year))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month > s2.m_Month))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day > s2.m_Day))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour > s2.m_Hour))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour == s2.m_Hour) && (s1.m_Min > s2.m_Min))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour == s2.m_Hour) && (s1.m_Min == s2.m_Min) && (s1.m_Sec > s2.m_Sec))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour == s2.m_Hour) && (s1.m_Min == s2.m_Min) && (s1.m_Sec == s2.m_Sec) && (s1.m_ActPointSec > s2.m_ActPointSec));
+	}
 	friend bool operator!= (const GPSTime& s1, const GPSTime& s2)
 	{
 		return !((s1.m_ActPointSec == s2.m_ActPointSec)
@@ -81,17 +91,23 @@ struct StationInfo {
   double altitude;
   string gpsTime;
   bool GPSIsValid;
-  int TotalDiskSpace;
-  int FreeDiskSpace;
-  bool isDeleted;
+  //int TotalDiskSpace;
+  //int FreeDiskSpace;
 };
 
 struct TriggerInfo {
 	GPSTime time;
-	int ActPointSec;
 	int stationID;
-	int Mean;
-	int Value;
+	double Value;
+	friend bool operator<(const TriggerInfo& s1, const TriggerInfo& s2)
+	{
+		return (s1.time) < (s2.time);
+	}
+
+	friend bool operator>(const TriggerInfo& s1, const TriggerInfo& s2)
+	{
+		return (s1.time) > (s2.time);
+	}
 };
 
 
