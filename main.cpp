@@ -38,8 +38,12 @@ int main() {
         threadLoadData(allTriggers, parser);
         });
 
+    while(1){
+        int nCount = allTriggers.size();
+        cout << "allTriggers have " << nCount << " points." <<endl;
+        std::this_thread::sleep_for(std::chrono::seconds(10));
+    }
 
-    int nCount = allTriggers.size();
     int curLoopIdx = 0;
     
 	//double endTime = CGPSTimeAlgorithm::GetGPSTimeFromHour(allTriggers.back().m_time);

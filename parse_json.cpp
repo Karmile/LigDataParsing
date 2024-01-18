@@ -53,7 +53,7 @@ vector<StationInfo> Parser::GetStationData(){
                     std::cout << "Name: " << site.name;
                     std::cout << "   StationID: " << site.stationID << std::endl;
                 }
-                std::cout << "current quantity of sites:  " << sites_.size() << std::endl << endl;
+                std::cout << "Sites info obtained from api:  " << sites_.size() << std::endl << endl;
             }
             else {
                 std::cerr << "Failed to parse JSON response" << std::endl;
@@ -91,7 +91,7 @@ vector<TriggerInfo> Parser::GetTriggersData() {
 						stoi(item[3].asString()), stoi(item[4].asString()), stoi(item[5].asString()), stoi(item[6].asString()) * 1.0 / 1e9);
                     allTriggers_.push_back(trigger);
                     }
-                    cout << "current quantity of trigger info obtained: " << allTriggers_.size() << endl << endl;
+                    cout << "Trigger info obtained from api: " << allTriggers_.size() << endl << endl;
                 }
                 else {
                     std::cerr << "Failed to parse JSON response" << std::endl;
