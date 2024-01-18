@@ -2,28 +2,51 @@
 #include "iostream"
 #include "GPSTimeAlgorithm.h"
 #include "LocStruct.h"
+#include <thread>
 
 using namespace std;
 
+void threadLoadData(vector<TriggerInfo>& allTriggers, Parser& parser){
+    while (1){
+        // è·å–æœ€æ–°çš„æ•°æ®
+        vector<TriggerInfo> cache = parser.GetTriggersData();
+
+        // åˆå¹¶æ•°æ®
+        allTriggers.insert(allTriggers.end(), cache.begin(), cache.end());
+        sort(allTriggers.begin(), allTriggers.end()); // æŒ‰ç…§æ—¶é—´æ’åº
+        allTriggers.erase(unique(allTriggers.begin(), allTriggers.end()), allTriggers.end()); // å»é‡
+
+        // ä¼‘çœ 30s
+        std::this_thread::sleep_for(std::chrono::seconds(30));
+    }
+}
+
+
 int main() {
-    // ·¢ÆğHTTPSÇëÇó»ñÈ¡Õ¾µãĞÅÏ¢
+    // ï¿½ï¿½ï¿½ï¿½HTTPSï¿½ï¿½ï¿½ï¿½ï¿½È¡Õ¾ï¿½ï¿½ï¿½ï¿½Ï¢
     std::string str = (".\\config.yaml");
     Parser parser(str);
+    
+    // sites ä¸ç”¨é‡å¤è·å–ï¼Œä¸€æ®µæ—¶é—´å†…è·å–ä¸€æ¬¡å³å¯
+    vector<StationInfo> sites = parser.GetStationData();
 
-    vector<StationInfo> sites;
+    // allTriggers è¦æ±‚æ¯30såˆ·æ–°ï¼Œ
     vector<TriggerInfo> allTriggers;
 
-    parser.parse_station_json(sites);
-    parser.parse_trigger_json(allTriggers);
+    // æ–°è¿›ç¨‹ï¼Œè¿ç»­è·å–æ•°æ®
+    thread loader([&]() {
+        threadLoadData(allTriggers, parser);
+        });
 
-	int nCount = allTriggers.size();
-	int curLoopIdx = 0;
 
+    int nCount = allTriggers.size();
+    int curLoopIdx = 0;
+    
 	//double endTime = CGPSTimeAlgorithm::GetGPSTimeFromHour(allTriggers.back().m_time);
 //
 //	while (allTriggers.size())
 //	{
-//		//ÓÃÓÚÃ¶¾ÙËùÓĞ¶¨Î»×éºÏµÄÔ¤´¦ÀíÏòÁ¿
+//		//ï¿½ï¿½ï¿½ï¿½Ã¶ï¿½ï¿½ï¿½ï¿½ï¿½Ğ¶ï¿½Î»ï¿½ï¿½Ïµï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //		vector<triggerCachePool> locCachePool;
 //
 //		double baseTime = CGPSTimeAlgorithm::GetGPSTimeFromHour(allTriggers[curLoopIdx].m_time);
@@ -38,7 +61,7 @@ int main() {
 //		{
 //			auto& oneSignal = allTriggers[j];
 //			double trigTime = CGPSTimeAlgorithm::GetGPSTimeFromHour(oneSignal.m_time);
-//			double diffTime = baseTime - trigTime; //¼ÆËãÕ¾µã¼äµÄÊ±¼ä²î
+//			double diffTime = baseTime - trigTime; //ï¿½ï¿½ï¿½ï¿½Õ¾ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½
 //
 //			if ((diffTime < -(0.00025)) | (diffTime > 0))
 //			{
@@ -61,7 +84,7 @@ int main() {
 //				if (isNewSta)
 //				{
 //					triggerCachePool onePool;
-//					onePool.staLocation = (LocSta(oneSignal.lat * PI / 180, oneSignal.lon * PI / 180, oneSignal.alt / 1000.0)); //Èç¹ûÄ³¸öÕ¾µãÓĞÂú×ãÌõ¼şµÄ´¥·¢ÊÂ¼ş Ôòflag¼Ó1×÷Îª±ê¼Ç
+//					onePool.staLocation = (LocSta(oneSignal.lat * PI / 180, oneSignal.lon * PI / 180, oneSignal.alt / 1000.0)); //ï¿½ï¿½ï¿½Ä³ï¿½ï¿½Õ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½ï¿½Â¼ï¿½ ï¿½ï¿½flagï¿½ï¿½1ï¿½ï¿½Îªï¿½ï¿½ï¿½
 //					onePool.staID = oneSignal.iSiteID;
 //					//trigCacPool.staName = stations[m].staName;
 //					onePool.triggerPool.emplace_back(triggerElement(trigTime, j, oneSignal.m_vpp));
@@ -135,6 +158,6 @@ int main() {
 //		allTriggers.front().releaseData();
 //		allTriggers.erase(allTriggers.begin());
 //	}
-
+    loader.join();
     return 0;
 }

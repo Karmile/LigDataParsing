@@ -108,6 +108,18 @@ struct TriggerInfo {
 	{
 		return (s1.time) > (s2.time);
 	}
+
+	friend bool operator== (const TriggerInfo& s1, const TriggerInfo& s2)
+	{
+		return (s1.time == s2.time)
+			&& (s1.stationID == s2.stationID);
+	}
+
+	friend bool operator!= (const TriggerInfo& s1, const TriggerInfo& s2)
+	{
+		return (s1.time != s2.time)
+			|| (s1.stationID != s2.stationID);
+	}
 };
 
 
