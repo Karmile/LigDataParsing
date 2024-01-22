@@ -7,7 +7,6 @@ class Parser
 {
 public:
 	Parser(const std::string str );
-	void Parse(bool get = true);
 	//inline const vector<StationInfo>& GetStationData() {
 	//	return sites_;
 	//}
