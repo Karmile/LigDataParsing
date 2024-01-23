@@ -3,7 +3,8 @@
 #include "DataStruct.h"
 
 #define FTYPE double
-#define PI 3.1415926
+#define PI 3.1415926535897931
+#define degree2radians 0.017453292519943
 #define cVeo 299792.458
 
 #define R_OK 4 /* Test for read permission.  */

@@ -1,7 +1,8 @@
 #pragma once
 #include<string>
-
+#include<cmath>
 using namespace std;
+
 struct GPSTime
 {
 	GPSTime(void)
@@ -71,6 +72,19 @@ struct GPSTime
 			&& (s1.m_Sec == s2.m_Sec));
 	}
 
+	friend double operator- (const GPSTime& s1, const GPSTime& s2)
+	{
+		if ((s1.m_Year == s2.m_Year)
+			&& (s1.m_Month == s2.m_Month)
+			&& (s1.m_Day == s2.m_Day)
+			&& (s1.m_Hour == s2.m_Hour)
+			&& (s1.m_Min == s2.m_Min)
+			&& (s1.m_Sec == s2.m_Sec)){
+				return s1.m_ActPointSec - s2.m_ActPointSec;
+			}
+		return (s1.m_Year - s2.m_Year)*1e10+(s1.m_Month - s2.m_Month)*1e8+(s1.m_Day - s2.m_Day)*1e6+(s1.m_Hour - s2.m_Hour)*1e4+(s1.m_Min - s2.m_Min)*1e2+(s1.m_Sec - s2.m_Sec)+s1.m_ActPointSec - s2.m_ActPointSec;
+	}
+
 	bool m_isTimeVaild;
 	bool m_isTimeConfirm;
 	int m_Year;
@@ -83,7 +97,7 @@ struct GPSTime
 };
 
 struct StationInfo {
-  int id;
+  //int id;
   int stationID;
   string name;
   double latitude;
@@ -93,12 +107,18 @@ struct StationInfo {
   bool GPSIsValid;
   //int TotalDiskSpace;
   //int FreeDiskSpace;
+  
+  //double distance(const StationInfo& s1, const StationInfo& s2)
+  //{
+	 //return Stadistance(s1.latitude, s1.longitude, s2.latitude, s2.longitude);
+  //}
 };
 
 struct TriggerInfo {
 	GPSTime time;
 	int stationID;
 	double Value;
+	int staIndex;
 	friend bool operator<(const TriggerInfo& s1, const TriggerInfo& s2)
 	{
 		return (s1.time) < (s2.time);

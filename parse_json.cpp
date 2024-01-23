@@ -44,7 +44,7 @@ vector<StationInfo> Parser::GetStationData(){
 					//site.TotalDiskSpace = item["TotalDiskSpace"].asInt();
 					//site.FreeDiskSpace = item["FreeDiskSpace"].asInt();
 					site.gpsTime = item["GPSTime"].asString();
-					site.id = item["id"].asInt();
+					//site.id = item["id"].asInt();
 					site.GPSIsValid = item["GPSIsValid"].asBool();
 					sites_.push_back(site);
                 }

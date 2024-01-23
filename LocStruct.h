@@ -26,12 +26,12 @@ public:
 
 };
 
-class triggerCachePool
+class triggerAtStation
 {
 public:
-	vector<triggerElement> triggerPool;
+	vector<TriggerInfo> triggers;
 	LocSta staLocation;
-	int staID;
+	int stationID;
 	string staName;
 };
 

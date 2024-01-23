@@ -131,10 +131,11 @@
     <ClCompile Include="parse_json.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GeoTools.h" />
     <ClInclude Include="GPSTimeAlgorithm.h" />
     <ClInclude Include="include\DataStruct.h" />
+    <ClInclude Include="include\Params.h" />
     <ClInclude Include="LocStruct.h" />
-    <ClInclude Include="Params.h" />
     <ClInclude Include="parse_json.h" />
   </ItemGroup>
   <ItemGroup>
