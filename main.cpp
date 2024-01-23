@@ -6,26 +6,56 @@
 #include <map>
 #include "Params.h"
 #include "GeoTools.h"
+#include <shared_mutex>
 
 using namespace std;
-
+shared_mutex rwMutex;
+std::string str = (".\\config.yaml");
 void threadLoadData(vector<TriggerInfo>& allTriggers, Parser& parser){
+    
     while (1){
         // 获取最新的数据
-        vector<TriggerInfo> cache = parser.GetTriggersData();
-
-        // 合并数据 ---需要添加线程锁
-        allTriggers.insert(allTriggers.end(), cache.begin(), cache.end());
-        sort(allTriggers.begin(), allTriggers.end()); // 按照时间排序
-        allTriggers.erase(unique(allTriggers.begin(), allTriggers.end()), allTriggers.end()); // 去重
-        // ------------------
+        {
+            unique_lock<shared_mutex> lock(rwMutex);
+            vector<TriggerInfo> cache = parser.GetTriggersData();
+            // 合并数据
+            int init_size = allTriggers.size();
+            allTriggers.insert(allTriggers.end(), cache.begin(), cache.end());
+            sort(allTriggers.begin(), allTriggers.end()); // 按照时间排序
+            allTriggers.erase(unique(allTriggers.begin(), allTriggers.end()), allTriggers.end()); // 去重
+            cout << "add " << allTriggers.size() - init_size << " new triggers" << endl;
+            cout <<"current alltriggers size: " << allTriggers.size() << endl;
+            lock.unlock();
+        }
 
         break;
         // 休眠30s
-        std::this_thread::sleep_for(std::chrono::seconds(30));
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+    }
+}
+
+void threadShrinkData(vector<TriggerInfo>& allTriggers) {
+
+    YAML::Node config = YAML::LoadFile(str);
+    while (1) {
+        if (allTriggers.size())
+        {
+            {
+                unique_lock<shared_mutex> lock(rwMutex);
+                //The proportion of interval to sampling time
+                //scale与采样时间、此函数休眠时间相关,scale = T/t2
+                int n = allTriggers.size() / config["scale"].as<int>();
+                allTriggers.erase(allTriggers.begin(), allTriggers.begin() + n);
+                cout << "removed " << n << " old triggers" << endl << endl;
+                lock.unlock();
+            }
+            // 休眠30s 
+            std::this_thread::sleep_for(std::chrono::seconds(10));
+        }
 
     }
 }
+
 
 
 int main() {
@@ -61,10 +91,31 @@ int main() {
     // allTriggers 要求每30s刷新，
     vector<TriggerInfo> allTriggers;
 
-    // 新进程，连续获取数据
+    // 新线程，连续获取数据
     thread loader([&]() {
         threadLoadData(allTriggers, parser);
         });
+
+
+    //// 新线程，压缩数据
+    //thread shrinker([&]() {
+    //    threadShrinkData(allTriggers);
+    //    });
+
+    ////test
+    //while (1)
+    //{  
+    //    if (allTriggers.size())
+    //    {
+    //        shared_lock<shared_mutex> lock(rwMutex);
+    //        for (auto &trigger : allTriggers)    
+    //        {
+    //            //cout << trigger.stationID << endl;
+    //            trigger.stationID = 111;
+    //        }
+    //        cout << allTriggers.size() << endl;
+    //    }
+    //}
 
     // while(1){
     //     int nCount = allTriggers.size();
