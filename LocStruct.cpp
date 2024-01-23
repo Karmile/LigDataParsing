@@ -1,7 +1,9 @@
 
 #include "LocStruct.h"
 #include "Params.h"
-
+#include "ceres/ceres.h"
+#include "glog/logging.h"
+#include <Eigen/Core>
 LocSta FinalGeoLocation(vector<LocSta> Stations, vector<double> Loc_Time, LocSta result)
 {
 	int NumOfSta = Stations.size();
@@ -115,5 +117,65 @@ LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time)
 
 	delete[] pDiffBe2s;
 	delete[] pLocSta;
+	return result;
+}
+// add optimise solution 
+
+struct CostFunctor {
+	const std::vector<double>& t;
+	const vector<LocSta>& stations_;
+
+	CostFunctor(const std::vector<double>& t, const vector<LocSta>& stations)
+		: t(t), stations_(stations) {}
+	template <typename T>
+	bool operator()(const T* const params, T* residual) const {
+		for (size_t i = 0; i < stations_.size(); i++) {
+			auto& st = stations_[i];
+			T hdist_ = sqrt(pow((T(st.Lon) - params[0]), 2) + pow((T(st.Lat) - params[1]), 2));
+			T hdist = hdist_ * R;
+			T dist = sqrt(pow((T(st.h) - params[2]), 2) + pow(hdist, 2));
+			T tt = dist / cVeo;
+			T t_diff = T(t[i]) - tt - params[3];
+			residual[i] = t_diff;
+		}
+
+		return true;
+	}
+};
+LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time) {
+
+	// 构建 Ceres 问题
+	ceres::Problem problem;
+
+	// 添加参数
+	double params[4] = { 5.0, 5.00, 10.0, Loc_Time.back() }; // 初始参数
+	problem.AddParameterBlock(params, 4);
+
+	// 添加残差项
+	CostFunctor* cost_functor = new CostFunctor(Loc_Time, Stations);
+	problem.AddResidualBlock(new ceres::AutoDiffCostFunction<CostFunctor, 4, 4>(cost_functor), nullptr, params);
+
+	// 配置求解选项
+	ceres::Solver::Options options;
+	options.linear_solver_type = ceres::DENSE_SCHUR;
+	options.minimizer_progress_to_stdout = true;
+
+	// 求解
+	ceres::Solver::Summary summary;
+	ceres::Solve(options, &problem, &summary);
+
+	// 输出结果
+	std::cout << summary.BriefReport() << std::endl;
+	std::cout << "Estimated parameters: ";
+	for (int i = 0; i < 4; ++i) {
+		if (i < 2)
+		{
+			params[i] *= radians2degree;
+		}
+		std::cout << params[i] << " ";
+	}
+	std::cout << std::endl;
+	LocSta result(params[0], params[1], params[2]);
+
 	return result;
 }

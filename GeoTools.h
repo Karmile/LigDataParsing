@@ -14,9 +14,9 @@ double Stadistance(double LatA, double LonA, double LatB, double LonB)
 	LatB = rads(LatB);
 	LonA = rads(LonA);
 	LonB = rads(LonB);
-	double R = 6371.004;
+
 	//double distance = R * acos(cos(LatA)*cos(LatB)*cos(LonB - LonA) + sin(LatA)*sin(LatB));
 	//return distance;
 
-	return 6371.004 * (2.0f * asin(fmin(1.0f, sqrtf(sin((LatB - LatA) / 2) * sin((LatB - LatA) / 2) + sin((LonB - LonA) / 2) * sin((LonB - LonA) / 2) * cos(LatA) * cos(LatB)))));
+	return  (2.0f * asin(fmin(1.0f, sqrtf(sin((LatB - LatA) / 2) * sin((LatB - LatA) / 2) + sin((LonB - LonA) / 2) * sin((LonB - LonA) / 2) * cos(LatA) * cos(LatB)))))*R;
 }
