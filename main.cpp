@@ -57,6 +57,53 @@ void threadShrinkData(vector<TriggerInfo>& allTriggers) {
 }
 
 
+vector<vector<TriggerInfo>> getLocationPool(map<int, triggerAtStation>& triggerPool)
+{
+
+    vector<vector<TriggerInfo>> locCombinationPool;
+    int m = 0;
+    for (auto & oneStation: triggerPool)
+    {
+        int nPool = locCombinationPool.size();
+        int cachePoolLimit = oneStation.second.triggers.size();
+
+        if (m)
+        {
+            if (nPool == 0) break;
+            for (int k = cachePoolLimit - 1; k > -1; --k)
+            {
+                if (k)
+                {
+                    for (int p = 0; p < nPool; ++p)
+                    {
+                        locCombinationPool.push_back(locCombinationPool[p]);
+                        locCombinationPool.back().push_back(oneStation.second.triggers[k]);
+                    }
+                }
+                else
+                {
+                    for (int p = nPool - 1; p > -1; --p)
+                    {
+                        locCombinationPool[p].push_back(oneStation.second.triggers[k]);
+                    }
+                }
+            }
+        }
+        else
+        {
+            for (int k = cachePoolLimit - 1; k > -1; --k)
+            {
+                vector<TriggerInfo> oneComb;
+                oneComb.push_back(oneStation.second.triggers[k]);
+                locCombinationPool.push_back(oneComb);
+            }
+        }
+        m++;
+    }
+
+    return locCombinationPool;
+}
+
 
 int main() {
     std::string configFile = (".\\config.yaml");
@@ -185,15 +232,11 @@ int main() {
 
         int cc = 1;
 
-        for (int i = recycleIdx.size()-1; i >= 0; i--) {
-            allTriggers.erase(allTriggers.begin()+recycleIdx[i]);
-        }
-
        // curLoopIdx++;
 
-// 		if ((triggerPool.size()) >= 5)
-// 		{
-// 			vector<vector<triggerElement>> locCombinationPool = getLocationPool(locCachePool);
+ 		if ((triggerPool.size()) >= 5)
+ 		{
+ 			vector<vector<TriggerInfo>> locCombinationPool = getLocationPool(triggerPool);
 
  //			double MinSq = 10000000000000;
  //			LocSta result;
@@ -202,15 +245,15 @@ int main() {
  //#pragma omp parallel for
  //			for (int m = 0; m < locCombinationPool.size(); ++m)
  //			{
- //				vector<triggerElement>& oneComb = locCombinationPool[m];
+ //				vector<TriggerInfo>& oneComb = locCombinationPool[m];
 
  //				vector<double> Loc_Time_One;
  //				vector<LocSta> Stations_One;
 
  //				for (int j = 0; j < oneComb.size(); ++j)
  //				{
- //					Loc_Time_One.push_back(oneComb[j].m_time);
- //					Stations_One.push_back(locCachePool[j].staLocation);
+ //					Loc_Time_One.push_back(oneComb[j].time.m_Sec+ oneComb[j].time.m_ActPointSec);
+ //					Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
  //				}
 
  //				LocSta oneResult = GeoLocation(Stations_One, Loc_Time_One);
@@ -227,15 +270,15 @@ int main() {
 
  //			if (MinSq < 10.0)
  //			{
- //				vector<triggerElement>& oneComb = locCombinationPool[finalCombIdx];
+ //				vector<TriggerInfo>& oneComb = locCombinationPool[finalCombIdx];
 
  //				vector<double> Loc_Time_One;
  //				vector<LocSta> Stations_One;
 
  //				for (int j = 0; j < oneComb.size(); ++j)
  //				{
- //					Loc_Time_One.push_back(oneComb[j].m_time);
- //					Stations_One.push_back(locCachePool[j].staLocation);
+ //                   Loc_Time_One.push_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
+ //                   Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
  //				}
 
  //				LocSta oneResult = FinalGeoLocation(Stations_One, Loc_Time_One, result);
@@ -243,16 +286,20 @@ int main() {
  //				////////////////////
  //				////////////////////
 
- //				for (int j = 0; j < oneComb.size(); ++j)
- //				{
- //					allTriggers[oneComb[j].m_idx].releaseData();
- //					allTriggers.erase(allTriggers.begin() + oneComb[j].m_idx);
- //				}
+ //				//for (int j = 0; j < oneComb.size(); ++j)
+ //				//{
+ //				//	allTriggers[oneComb[j].m_idx].releaseData();
+ //				//	allTriggers.erase(allTriggers.begin() + oneComb[j].m_idx);
+ //				//}
 
  //				continue;
  //			}
-	//	 }
+		 }
 
+
+            for (int i = recycleIdx.size() - 1; i >= 0; i--) {
+                allTriggers.erase(allTriggers.begin() + recycleIdx[i]);
+            }
 	//	allTriggers.front().releaseData();
 	//	allTriggers.erase(allTriggers.begin());
 	}

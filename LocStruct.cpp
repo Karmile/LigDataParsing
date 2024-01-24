@@ -54,7 +54,7 @@ LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time)
 	locPara.boundS = boundaryS * PI / 180;
 	locPara.boundW = boundaryW * PI / 180;
 	locPara.boundN = boundaryN * PI / 180;
-	locPara.Lat = 0.01 * PI / 180;
+	locPara.Lat = 0.02 * PI / 180;
 	locPara.boundht = 20;
 	locPara.boundhb = 0;
 	locPara.dh = 1;

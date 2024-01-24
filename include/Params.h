@@ -14,10 +14,10 @@
 #define F_OK 0 /* Test for existence.  */
 
 #define Lattice 0.001
-#define boundaryW 111.5
-#define boundaryE (boundaryW + (448) * 0.01)
-#define boundaryS 21.5
-#define boundaryN (boundaryS + (448) * 0.01)
+#define boundaryW 100
+#define boundaryE (boundaryW+(3072)*0.01)
+#define boundaryS 18
+#define boundaryN (boundaryS+(3072)*0.01)
 
 using namespace std;
 
