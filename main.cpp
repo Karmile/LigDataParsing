@@ -123,12 +123,20 @@ int main() {
     //     std::this_thread::sleep_for(std::chrono::seconds(10));
     // }
 
-    int curLoopIdx = 0;
 
     std::this_thread::sleep_for(std::chrono::seconds(5));
 
     // 开始定位
 	//GPSTime endTime = allTriggers.back().time;
+
+    int idx = 0;
+    for (auto x : allTriggers) {
+        cout << CGPSTimeAlgorithm::GetTimeStr(x.time) << endl;
+        idx++;
+        if (idx == 100) break;
+    }
+
+    int curLoopIdx = 0;
 
     //
 	while (allTriggers.size())
@@ -137,11 +145,13 @@ int main() {
         map<int, triggerAtStation> triggerPool;
         //GPSTime baseTime = allTriggers[curLoopIdx].time;
         TriggerInfo& baseTrig = allTriggers[curLoopIdx];
+        vector<int> recycleIdx;
+        //recycleIdx.push_back(curLoopIdx);
 
         // Wait time
         if((allTriggers.back().time - baseTrig.time) < config["waitTime"].as<double>()) continue;
 
-		for (int j = curLoopIdx+1; j < allTriggers.size() - 1; ++j)
+		for (int j = curLoopIdx; j < allTriggers.size() - 1; ++j)
 		{
 			TriggerInfo& oneTrig = allTriggers[j];
             int trigSiteID = oneTrig.stationID;
@@ -151,8 +161,10 @@ int main() {
 
             std::cout << diffTime << endl;
 			
-            if (fabs(diffTime) < siteTimeMap[baseTrig.stationID][allTriggers[j].stationID])
+            if (fabs(diffTime) <= siteTimeMap[baseTrig.stationID][allTriggers[j].stationID])
             {
+                recycleIdx.push_back(j);
+
                 //判断键值是否存在
                 if (triggerPool.find(trigSiteID) == triggerPool.end())
                 {
@@ -172,8 +184,14 @@ int main() {
 		}
 
         int cc = 1;
-        curLoopIdx++;
-// 		if ((locCachePool.size()) >= 5)
+
+        for (int i = recycleIdx.size()-1; i >= 0; i--) {
+            allTriggers.erase(allTriggers.begin()+recycleIdx[i]);
+        }
+
+       // curLoopIdx++;
+
+// 		if ((triggerPool.size()) >= 5)
 // 		{
 // 			vector<vector<triggerElement>> locCombinationPool = getLocationPool(locCachePool);
 

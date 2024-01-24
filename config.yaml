@@ -1,6 +1,6 @@
 sites:
-  url: "http://112.26.166.27:18000"
-  #url: "http://222.195.83.28:18000"
+  #url: "http://112.26.166.27:18000"
+  url: "http://222.195.83.28:18000"
   api: "/getDetectionNetworkStatesApi"
 trigger: 
   url: "http://222.195.83.28:18000"
