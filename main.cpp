@@ -7,6 +7,7 @@
 #include "Params.h"
 #include "GeoTools.h"
 #include <shared_mutex>
+#include <chrono>
 
 using namespace std;
 shared_mutex rwMutex;
@@ -183,7 +184,7 @@ int main() {
         if (idx == 300) break;
     }
 
-    int curLoopIdx = 0;
+    auto start = std::chrono::high_resolution_clock::now();
 
     //
 	while (allTriggers.size())
@@ -191,14 +192,14 @@ int main() {
 		// vector<triggerAtStation> triggerPool;
         map<int, triggerAtStation> triggerPool;
         //GPSTime baseTime = allTriggers[curLoopIdx].time;
-        TriggerInfo& baseTrig = allTriggers[curLoopIdx];
+        TriggerInfo& baseTrig = allTriggers[0];
         vector<int> recycleIdx;
         //recycleIdx.push_back(curLoopIdx);
 
         // Wait time
         //if((allTriggers.back().time - baseTrig.time) < config["waitTime"].as<double>()) continue;
 
-		for (int j = curLoopIdx; j < allTriggers.size() ; ++j)
+		for (int j = 0; j < allTriggers.size() ; ++j)
 		{
 			TriggerInfo& oneTrig = allTriggers[j];
             int trigSiteID = oneTrig.stationID;
@@ -283,7 +284,7 @@ int main() {
 
  				LocSta oneResult = FinalGeoLocation(Stations_One, Loc_Time_One, result);
                 cout <<CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time)<<" "<< oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
-
+                cout << "LocCount: " << CountGeoLocationTimes << endl;
                 int cc = 1;
 
  				////////////////////
@@ -306,6 +307,16 @@ int main() {
 	//	allTriggers.front().releaseData();
 	//	allTriggers.erase(allTriggers.begin());
 	}
+
+    // 获取当前时间点
+    auto end = std::chrono::high_resolution_clock::now();
+
+    // 计算经过的时间（以秒为单位）
+    double elapsed_seconds = std::chrono::duration<double>(end - start).count();
+
+    // 输出经过的时间
+    std::cout << "Elapsed time: " << elapsed_seconds << " seconds.\n";
+
     loader.join();
     return 0;
 }
