@@ -14,9 +14,9 @@ LocSta FinalGeoLocation(vector<LocSta> Stations, vector<double> Loc_Time, LocSta
 
 	for (int m = 1; m != Stations.size(); ++m)
 	{
-		pDiffBe2s[m] = (Loc_Time[m] - Loc_Time[m - 1]) * cVeo;
+		pDiffBe2s[m] = (Loc_Time[m] - Loc_Time[m - 1]) * cVeo*0.99;
 	}
-	pDiffBe2s[0] = (Loc_Time[0] - Loc_Time[Loc_Time.size() - 1]) * cVeo;
+	pDiffBe2s[0] = (Loc_Time[0] - Loc_Time[Loc_Time.size() - 1]) * cVeo * 0.99;
 
 	//for (int i = 0; i != Stations.size(); ++i)
 	//{
@@ -57,7 +57,7 @@ LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time)
 	locPara.Lat = 0.02 * PI / 180;
 	locPara.boundht = 20;
 	locPara.boundhb = 0;
-	locPara.dh = 1;
+	locPara.dh = 0.5;
 
 	int NumOfSta = Stations.size();
 	LocSta *pLocSta = new LocSta[NumOfSta];
@@ -69,9 +69,9 @@ LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time)
 
 	for (int m = 1; m != Stations.size(); ++m)
 	{
-		pDiffBe2s[m] = (Loc_Time[m] - Loc_Time[m - 1]) * cVeo;
+		pDiffBe2s[m] = (Loc_Time[m] - Loc_Time[m - 1]) * cVeo * 0.99;
 	}
-	pDiffBe2s[0] = (Loc_Time[0] - Loc_Time[Loc_Time.size() - 1]) * cVeo;
+	pDiffBe2s[0] = (Loc_Time[0] - Loc_Time[Loc_Time.size() - 1]) * cVeo * 0.99;
 
 	//for (int i = 0; i != Stations.size(); ++i)
 	//{

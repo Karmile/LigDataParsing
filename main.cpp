@@ -178,9 +178,9 @@ int main() {
 
     int idx = 0;
     for (auto x : allTriggers) {
-        cout << CGPSTimeAlgorithm::GetTimeStr(x.time) << endl;
+        cout << CGPSTimeAlgorithm::GetTimeStr(x.time)<<" "<<x.stationID << endl;
         idx++;
-        if (idx == 100) break;
+        if (idx == 300) break;
     }
 
     int curLoopIdx = 0;
@@ -196,9 +196,9 @@ int main() {
         //recycleIdx.push_back(curLoopIdx);
 
         // Wait time
-        if((allTriggers.back().time - baseTrig.time) < config["waitTime"].as<double>()) continue;
+        //if((allTriggers.back().time - baseTrig.time) < config["waitTime"].as<double>()) continue;
 
-		for (int j = curLoopIdx; j < allTriggers.size() - 1; ++j)
+		for (int j = curLoopIdx; j < allTriggers.size() ; ++j)
 		{
 			TriggerInfo& oneTrig = allTriggers[j];
             int trigSiteID = oneTrig.stationID;
@@ -206,7 +206,7 @@ int main() {
 
 			if ((diffTime < -(0.003)) || (diffTime > 0)) break;
 
-            std::cout << diffTime << endl;
+            //std::cout << diffTime << endl;
 			
             if (fabs(diffTime) <= siteTimeMap[baseTrig.stationID][allTriggers[j].stationID])
             {
@@ -238,62 +238,65 @@ int main() {
  		{
  			vector<vector<TriggerInfo>> locCombinationPool = getLocationPool(triggerPool);
 
- //			double MinSq = 10000000000000;
- //			LocSta result;
- //			int finalCombIdx = 0;
+ 			double MinSq = 10000000000000;
+ 			LocSta result;
+ 			int finalCombIdx = 0;
 
- //#pragma omp parallel for
- //			for (int m = 0; m < locCombinationPool.size(); ++m)
- //			{
- //				vector<TriggerInfo>& oneComb = locCombinationPool[m];
+ #pragma omp parallel for
+ 			for (int m = 0; m < locCombinationPool.size(); ++m)
+ 			{
+ 				vector<TriggerInfo>& oneComb = locCombinationPool[m];
 
- //				vector<double> Loc_Time_One;
- //				vector<LocSta> Stations_One;
+ 				vector<double> Loc_Time_One;
+ 				vector<LocSta> Stations_One;
 
- //				for (int j = 0; j < oneComb.size(); ++j)
- //				{
- //					Loc_Time_One.push_back(oneComb[j].time.m_Sec+ oneComb[j].time.m_ActPointSec);
- //					Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
- //				}
+ 				for (int j = 0; j < oneComb.size(); ++j)
+ 				{
+ 					Loc_Time_One.push_back(oneComb[j].time.m_Sec+ oneComb[j].time.m_ActPointSec);
+ 					Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
+ 				}
 
- //				LocSta oneResult = GeoLocation(Stations_One, Loc_Time_One);
+ 				LocSta oneResult = GeoLocation(Stations_One, Loc_Time_One);
 
- //				CountGeoLocationTimes++;
+ 				CountGeoLocationTimes++;
 
- //				if (oneResult.sq < MinSq)
- //				{
- //					MinSq = oneResult.sq;
- //					result = oneResult;
- //					finalCombIdx = m;
- //				}
- //			}
+ 				if (oneResult.sq < MinSq)
+ 				{
+ 					MinSq = oneResult.sq;
+ 					result = oneResult;
+ 					finalCombIdx = m;
+ 				}
+ 			}
 
- //			if (MinSq < 10.0)
- //			{
- //				vector<TriggerInfo>& oneComb = locCombinationPool[finalCombIdx];
+ 			if (MinSq < 10.0)
+ 			{
+ 				vector<TriggerInfo>& oneComb = locCombinationPool[finalCombIdx];
 
- //				vector<double> Loc_Time_One;
- //				vector<LocSta> Stations_One;
+ 				vector<double> Loc_Time_One;
+ 				vector<LocSta> Stations_One;
 
- //				for (int j = 0; j < oneComb.size(); ++j)
- //				{
- //                   Loc_Time_One.push_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
- //                   Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
- //				}
+ 				for (int j = 0; j < oneComb.size(); ++j)
+ 				{
+                    Loc_Time_One.push_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
+                    Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
+ 				}
 
- //				LocSta oneResult = FinalGeoLocation(Stations_One, Loc_Time_One, result);
+ 				LocSta oneResult = FinalGeoLocation(Stations_One, Loc_Time_One, result);
+                cout <<CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time)<<" "<< oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
 
- //				////////////////////
- //				////////////////////
+                int cc = 1;
 
- //				//for (int j = 0; j < oneComb.size(); ++j)
- //				//{
- //				//	allTriggers[oneComb[j].m_idx].releaseData();
- //				//	allTriggers.erase(allTriggers.begin() + oneComb[j].m_idx);
- //				//}
+ 				////////////////////
+ 				////////////////////
 
- //				continue;
- //			}
+ 				//for (int j = 0; j < oneComb.size(); ++j)
+ 				//{
+ 				//	allTriggers[oneComb[j].m_idx].releaseData();
+ 				//	allTriggers.erase(allTriggers.begin() + oneComb[j].m_idx);
+ 				//}
+
+ 				/*continue*/;
+ 			}
 		 }
 
 
