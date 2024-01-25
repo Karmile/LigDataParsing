@@ -25,7 +25,7 @@ LocSta FinalGeoLocation(vector<LocSta> Stations, vector<double> Loc_Time, LocSta
 
 	LocPara locPara_S;
 
-	locPara_S.Lat = 0.00005 * PI / 180;
+	locPara_S.Lat = 0.0005 * PI / 180;
 	locPara_S.boundW = (result.Lon - 0.016) * PI / 180;
 	locPara_S.boundS = (result.Lat - 0.016) * PI / 180;
 	locPara_S.boundE = (result.Lon + 0.0162001) * PI / 180;
@@ -37,7 +37,7 @@ LocSta FinalGeoLocation(vector<LocSta> Stations, vector<double> Loc_Time, LocSta
 	if (locPara_S.boundht > 20)
 		locPara_S.boundht = 20;
 
-	locPara_S.dh = 0.005;
+	locPara_S.dh = 0.05;
 	LocCuda New_loccuda_Final;
 	New_loccuda_Final.GetLocPara(locPara_S, pLocSta, NumOfSta);
 	resultFinal = New_loccuda_Final.Location3D_GPU(pDiffBe2s, NumOfSta);
@@ -57,7 +57,7 @@ LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time)
 	locPara.Lat = 0.04 * PI / 180;
 	locPara.boundht = 20;
 	locPara.boundhb = 0;
-	locPara.dh = 1;
+	locPara.dh = 2;
 
 	int NumOfSta = Stations.size();
 	LocSta *pLocSta = new LocSta[NumOfSta];
