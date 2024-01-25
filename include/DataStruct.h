@@ -1,6 +1,9 @@
 #pragma once
 #include<string>
 #include<cmath>
+#include <iomanip>
+#include <sstream>
+
 using namespace std;
 
 struct GPSTime
@@ -30,7 +33,46 @@ struct GPSTime
 		m_Sec = input_Sec;
 		m_ActPointSec = input_ActPointSec;
 	}
+	GPSTime(string input_str)
+	{
+		if (input_str.find("T") != 0&&input_str.length()==15)
+		{
+			m_isTimeVaild = true;
+			m_isTimeConfirm = true;
+			m_Year  = stoi(input_str.substr(0, 4));
+			m_Month = stoi(input_str.substr(4, 2));
+			m_Day = stoi(input_str.substr(6, 2));
+			m_Hour = stoi(input_str.substr(9, 2));
+			m_Min = stoi(input_str.substr(11, 2));
+			m_Sec = stoi(input_str.substr(13, 2));
+			m_ActPointSec = 0;
+		}
+		else if (input_str.length() == 14)
+		{
+			m_isTimeVaild = true;
+			m_isTimeConfirm = true;
+			m_Year = stoi(input_str.substr(0, 4));
+			m_Month = stoi(input_str.substr(4, 2));
+			m_Day = stoi(input_str.substr(6, 2));
+			m_Hour = stoi(input_str.substr(8, 2));
+			m_Min = stoi(input_str.substr(10, 2));
+			m_Sec = stoi(input_str.substr(12, 2));
+			m_ActPointSec = 0;
+		}
+		else
+		{
+			m_isTimeVaild = false;
+			m_isTimeConfirm = false;
+			m_Year = 0;
+			m_Month = 0;
+			m_Day = 0;
+			m_Hour = 0;
+			m_Min = 0;
+			m_Sec = 0;
+			m_ActPointSec = 0;
+		}
 
+	}
 	friend bool operator== (const GPSTime& s1, const GPSTime& s2)
 	{
 		return (s1.m_ActPointSec == s2.m_ActPointSec)
@@ -85,6 +127,41 @@ struct GPSTime
 		return (s1.m_Year - s2.m_Year)*1e10+(s1.m_Month - s2.m_Month)*1e8+(s1.m_Day - s2.m_Day)*1e6+(s1.m_Hour - s2.m_Hour)*1e4+(s1.m_Min - s2.m_Min)*1e2+(s1.m_Sec - s2.m_Sec)+s1.m_ActPointSec - s2.m_ActPointSec;
 	}
 
+	GPSTime operator+= (const GPSTime& s2)
+	{
+		GPSTime res;
+		m_Sec = (m_Sec + s2.m_Sec) % 60;
+		int carrySecs = (m_Sec + s2.m_Sec) / 60;
+		m_Min = (m_Min + s2.m_Min + carrySecs) % 60;
+		int carryMins = (m_Min + s2.m_Min + carrySecs) / 60;
+		m_Hour = (m_Hour + s2.m_Hour + carryMins) % 24;
+		int carryHours = (m_Hour + s2.m_Hour + carryMins) / 24;
+		// 计算日期，并考虑月底和年底的特殊情况
+		int maxDays = 31;
+		if (m_Month == 2)
+		{
+			maxDays = (m_Year % 4 == 0 && m_Year % 100 != 0) || m_Year % 400 == 0 ? 29 : 28;
+		}
+		else if (m_Month == 4 || m_Month == 6 || m_Month == 9 || m_Month == 11)
+		{
+			maxDays = 30;
+		}
+		m_Day = (m_Day + s2.m_Day + carryHours) % (maxDays + 1);
+		int carryDays = (m_Day + s2.m_Day + carryHours) / (maxDays + 1);
+
+		m_Month = (m_Month + s2.m_Month + carryDays - 1) % 12 + 1;
+		int carryMonths = (m_Month + s2.m_Month + carryDays - 1) / 12;
+
+		m_Year = m_Year + s2.m_Year + carryMonths;
+		return *this;
+	}
+	string str() const {
+		char buffer[20];
+		std::snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d %02d:%02d:%02d",
+			m_Year, m_Month, m_Day, m_Hour, m_Min, m_Sec);
+		return std::string(buffer);
+	}
+	
 	bool m_isTimeVaild;
 	bool m_isTimeConfirm;
 	int m_Year;

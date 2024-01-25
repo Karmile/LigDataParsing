@@ -2,6 +2,7 @@
 #include "yaml-cpp/yaml.h"
 #include <iostream>
 #include "DataStruct.h"
+#include <httplib.h>
 
 class Parser
 {
@@ -15,8 +16,8 @@ public:
 	//}
 	vector<StationInfo> GetStationData();
 	vector<TriggerInfo> GetTriggersData();
-
 private:
+	void Parser::parse_result(const httplib::Result& res, vector<TriggerInfo>& alltriggers);
 	YAML::Node config_;
 
 };

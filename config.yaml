@@ -5,9 +5,10 @@ sites:
 trigger: 
   url: "http://222.195.83.28:18000"
   api: "/getHistoricalTrigger/20230719015506/10"
+  api_nt: "/getHistoricalTrigger/"
 scale: 20
 waitTime: 60
 mode: reProcess   # realTime
 reProcess:
   startTime: 20230701T000000
-  endTime: 20230701T010000
+  endTime: 20230701T002000

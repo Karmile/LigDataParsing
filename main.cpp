@@ -176,147 +176,152 @@ int main() {
 
     // 开始定位
 	//GPSTime endTime = allTriggers.back().time;
+    while (1)
+    {
+        while (allTriggers.size())
+        {
+            shared_lock<shared_mutex> lock(rwMutex);
+            int idx = 0;
+            for (const auto& x : allTriggers) {
+                cout << CGPSTimeAlgorithm::GetTimeStr(x.time) << " " << x.stationID << endl;
+                idx++;
+                if (idx == 300) break;
+            }
 
-    int idx = 0;
-    for (auto x : allTriggers) {
-        cout << CGPSTimeAlgorithm::GetTimeStr(x.time)<<" "<<x.stationID << endl;
-        idx++;
-        if (idx == 300) break;
-    }
+            auto start = std::chrono::high_resolution_clock::now();
 
-    auto start = std::chrono::high_resolution_clock::now();
+            //
 
-    //
-	while (allTriggers.size())
-	{
-		// vector<triggerAtStation> triggerPool;
-        map<int, triggerAtStation> triggerPool;
-        //GPSTime baseTime = allTriggers[curLoopIdx].time;
-        TriggerInfo& baseTrig = allTriggers[0];
-        vector<int> recycleIdx;
-        //recycleIdx.push_back(curLoopIdx);
+                // vector<triggerAtStation> triggerPool;
+            map<int, triggerAtStation> triggerPool;
+            //GPSTime baseTime = allTriggers[curLoopIdx].time;
+            TriggerInfo& baseTrig = allTriggers[0];
+            vector<int> recycleIdx;
+            //recycleIdx.push_back(curLoopIdx);
 
-        // Wait time
-        //if((allTriggers.back().time - baseTrig.time) < config["waitTime"].as<double>()) continue;
+                // Wait time
+                //if((allTriggers.back().time - baseTrig.time) < config["waitTime"].as<double>()) continue;
 
-		for (int j = 0; j < allTriggers.size() ; ++j)
-		{
-			TriggerInfo& oneTrig = allTriggers[j];
-            int trigSiteID = oneTrig.stationID;
-			double diffTime = baseTrig.time - oneTrig.time;
-
-			if ((diffTime < -(0.003)) || (diffTime > 0)) break;
-
-            //std::cout << diffTime << endl;
-			
-            if (fabs(diffTime) <= siteTimeMap[baseTrig.stationID][allTriggers[j].stationID])
+            for (int j = 0; j < allTriggers.size(); ++j)
             {
-                recycleIdx.push_back(j);
+                TriggerInfo& oneTrig = allTriggers[j];
+                int trigSiteID = oneTrig.stationID;
+                double diffTime = baseTrig.time - oneTrig.time;
 
-                //判断键值是否存在
-                if (triggerPool.find(trigSiteID) == triggerPool.end())
+                if ((diffTime < -(0.003)) || (diffTime > 0)) continue;
+
+                //std::cout << diffTime << endl;
+
+                if ((fabs(diffTime) < siteTimeMap[baseTrig.stationID][oneTrig.stationID])
+                    || (baseTrig.stationID == oneTrig.stationID))
                 {
-                    triggerAtStation oneTriggerAtStation;
-                    oneTriggerAtStation.staLocation = (LocSta(siteMap[trigSiteID].latitude * degree2radians,
-                                                            siteMap[trigSiteID].longitude * degree2radians,
-                                                            siteMap[trigSiteID].altitude / 1000.0));
-                    oneTriggerAtStation.stationID = trigSiteID;
-                    oneTriggerAtStation.triggers.push_back(oneTrig);
-                    triggerPool[trigSiteID] = oneTriggerAtStation;
-                }
-                else
-                {
-                    triggerPool[trigSiteID].triggers.push_back(oneTrig);
+                    recycleIdx.push_back(j);
+
+                    //判断键值是否存在
+                    if (triggerPool.find(trigSiteID) == triggerPool.end())
+                    {
+                        triggerAtStation oneTriggerAtStation;
+                        oneTriggerAtStation.staLocation = (LocSta(siteMap[trigSiteID].latitude * degree2radians,
+                            siteMap[trigSiteID].longitude * degree2radians,
+                            siteMap[trigSiteID].altitude / 1000.0));
+                        oneTriggerAtStation.stationID = trigSiteID;
+                        oneTriggerAtStation.triggers.push_back(oneTrig);
+                        triggerPool[trigSiteID] = oneTriggerAtStation;
+                    }
+                    else
+                    {
+                        triggerPool[trigSiteID].triggers.push_back(oneTrig);
+                    }
                 }
             }
-		}
 
-        int cc = 1;
+            int cc = 1;
 
-       // curLoopIdx++;
+            // curLoopIdx++;
 
- 		if ((triggerPool.size()) >= 5)
- 		{
- 			vector<vector<TriggerInfo>> locCombinationPool = getLocationPool(triggerPool);
+            if ((triggerPool.size()) >= 5)
+            {
+                vector<vector<TriggerInfo>> locCombinationPool = getLocationPool(triggerPool);
 
- 			double MinSq = 10000000000000;
- 			LocSta result;
- 			int finalCombIdx = 0;
+                double MinSq = 10000000000000;
+                LocSta result;
+                int finalCombIdx = 0;
 
- #pragma omp parallel for
- 			for (int m = 0; m < locCombinationPool.size(); ++m)
- 			{
- 				vector<TriggerInfo>& oneComb = locCombinationPool[m];
+#pragma omp parallel for
+                for (int m = 0; m < locCombinationPool.size(); ++m)
+                {
+                    vector<TriggerInfo>& oneComb = locCombinationPool[m];
 
- 				vector<double> Loc_Time_One;
- 				vector<LocSta> Stations_One;
+                    vector<double> Loc_Time_One;
+                    vector<LocSta> Stations_One;
 
- 				for (int j = 0; j < oneComb.size(); ++j)
- 				{
- 					Loc_Time_One.push_back(oneComb[j].time.m_Sec+ oneComb[j].time.m_ActPointSec);
- 					Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
- 				}
+                    for (int j = 0; j < oneComb.size(); ++j)
+                    {
+                        Loc_Time_One.push_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
+                        Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
+                    }
 
- 				LocSta oneResult = GeoLocation(Stations_One, Loc_Time_One);
+                    LocSta oneResult = GeoLocation(Stations_One, Loc_Time_One);
+                    //LocSta oneResult1 = GeoLocation_OP(Stations_One, Loc_Time_One);
+                    CountGeoLocationTimes++;
 
- 				CountGeoLocationTimes++;
+                    if (oneResult.sq < MinSq)
+                    {
+                        MinSq = oneResult.sq;
+                        result = oneResult;
+                        finalCombIdx = m;
+                    }
+                }
 
- 				if (oneResult.sq < MinSq)
- 				{
- 					MinSq = oneResult.sq;
- 					result = oneResult;
- 					finalCombIdx = m;
- 				}
- 			}
+                if (MinSq < 10.0)
+                {
+                    vector<TriggerInfo>& oneComb = locCombinationPool[finalCombIdx];
 
- 			if (MinSq < 10.0)
- 			{
- 				vector<TriggerInfo>& oneComb = locCombinationPool[finalCombIdx];
+                    vector<double> Loc_Time_One;
+                    vector<LocSta> Stations_One;
 
- 				vector<double> Loc_Time_One;
- 				vector<LocSta> Stations_One;
+                    for (int j = 0; j < oneComb.size(); ++j)
+                    {
+                        Loc_Time_One.push_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
+                        Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
+                    }
 
- 				for (int j = 0; j < oneComb.size(); ++j)
- 				{
-                    Loc_Time_One.push_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
-                    Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
- 				}
+                    LocSta oneResult = FinalGeoLocation(Stations_One, Loc_Time_One, result);
+                    cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
+                    cout << "LocCount: " << CountGeoLocationTimes << endl;
+                    int cc = 1;
 
- 				LocSta oneResult = FinalGeoLocation(Stations_One, Loc_Time_One, result);
-                cout <<CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time)<<" "<< oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
-                cout << "LocCount: " << CountGeoLocationTimes << endl;
-                int cc = 1;
+                    ////////////////////
+                    ////////////////////
 
- 				////////////////////
- 				////////////////////
+                    //for (int j = 0; j < oneComb.size(); ++j)
+                    //{
+                    //	allTriggers[oneComb[j].m_idx].releaseData();
+                    //	allTriggers.erase(allTriggers.begin() + oneComb[j].m_idx);
+                    //}
 
- 				//for (int j = 0; j < oneComb.size(); ++j)
- 				//{
- 				//	allTriggers[oneComb[j].m_idx].releaseData();
- 				//	allTriggers.erase(allTriggers.begin() + oneComb[j].m_idx);
- 				//}
-
- 				/*continue*/;
- 			}
-		 }
+                    /*continue*/;
+                }
+            }
 
 
             for (int i = recycleIdx.size() - 1; i >= 0; i--) {
                 allTriggers.erase(allTriggers.begin() + recycleIdx[i]);
             }
-	//	allTriggers.front().releaseData();
-	//	allTriggers.erase(allTriggers.begin());
-	}
+            //	allTriggers.front().releaseData();
+            //	allTriggers.erase(allTriggers.begin());
 
-    // 获取当前时间点
-    auto end = std::chrono::high_resolution_clock::now();
 
-    // 计算经过的时间（以秒为单位）
-    double elapsed_seconds = std::chrono::duration<double>(end - start).count();
+        // 获取当前时间点
+            auto end = std::chrono::high_resolution_clock::now();
 
-    // 输出经过的时间
-    std::cout << "Elapsed time: " << elapsed_seconds << " seconds.\n";
+            // 计算经过的时间（以秒为单位）
+            double elapsed_seconds = std::chrono::duration<double>(end - start).count();
 
+            // 输出经过的时间
+            std::cout << "Elapsed time: " << elapsed_seconds << " seconds.\n";
+        }
+    }
     loader.join();
     return 0;
 }
