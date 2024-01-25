@@ -54,10 +54,10 @@ LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time)
 	locPara.boundS = boundaryS * PI / 180;
 	locPara.boundW = boundaryW * PI / 180;
 	locPara.boundN = boundaryN * PI / 180;
-	locPara.Lat = 0.02 * PI / 180;
+	locPara.Lat = 0.04 * PI / 180;
 	locPara.boundht = 20;
 	locPara.boundhb = 0;
-	locPara.dh = 0.5;
+	locPara.dh = 1;
 
 	int NumOfSta = Stations.size();
 	LocSta *pLocSta = new LocSta[NumOfSta];
@@ -109,7 +109,7 @@ LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time)
 		if (locPara_S.boundht > 20)
 			locPara_S.boundht = 20;
 
-		locPara_S.dh = 0.1;
+		locPara_S.dh = 0.5;
 		LocCuda New_loccuda_Final;
 		New_loccuda_Final.GetLocPara(locPara_S, pLocSta, NumOfSta);
 		result = New_loccuda_Final.Location3D_GPU(pDiffBe2s, NumOfSta);
