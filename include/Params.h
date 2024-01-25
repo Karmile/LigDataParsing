@@ -33,3 +33,4 @@ static int cachePoolLimitEachStation = 3;
 static double sqLevel = 0.3;
 static GPSTime pastFileTime;
 static unsigned long long CountGeoLocationTimes = 0;
+static unsigned long long CountLocationPoints = 0;

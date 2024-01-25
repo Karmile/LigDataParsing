@@ -104,27 +104,27 @@ public:
 
 	static void GetTimeStr(GPSTime Time, char *str, int strLength)
 	{
-		sprintf(str, "%02d%02d%02d%02d%02d%02d.%07d",
+		sprintf(str, "%02d%02d%02d%02d%02d%02d.%08d",
 				Time.m_Year,
 				Time.m_Month,
 				Time.m_Day,
 				Time.m_Hour,
 				Time.m_Min,
 				Time.m_Sec,
-				int(Time.m_ActPointSec * 10000000));
+				int(Time.m_ActPointSec * 100000000));
 	}
 
 	static string GetTimeStr(GPSTime Time)
 	{
 		char str[24];
-		sprintf(str, "%02d%02d%02d%02d%02d%02d.%07d",
+		sprintf(str, "%02d%02d%02d%02d%02d%02d.%08d",
 				Time.m_Year,
 				Time.m_Month,
 				Time.m_Day,
 				Time.m_Hour,
 				Time.m_Min,
 				Time.m_Sec,
-				int(Time.m_ActPointSec * 10000000));
+				int(Time.m_ActPointSec * 100000000));
 		string str1 = str;
 		return str1;
 	}
