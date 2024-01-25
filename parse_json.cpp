@@ -1,6 +1,5 @@
 #include <iostream>
 #include <json/json.h>
-#include <httplib.h>
 #include "yaml-cpp/yaml.h"
 #include "parse_json.h"
 #include "chrono"
@@ -71,37 +70,55 @@ vector<StationInfo> Parser::GetStationData(){
     return sites_;
 }
 
-vector<TriggerInfo> Parser::GetTriggersData() {
-    vector<TriggerInfo> allTriggers_;
-    httplib::Client client(config_["trigger"]["url"].as<string>());
-    auto res = client.Get(config_["trigger"]["api"].as<string>());
+void Parser::parse_result(const httplib::Result &res, vector<TriggerInfo>&alltriggers){
     if (res && res->status == 200) {
         Json::Value root;
         Json::Reader reader;
-            // 解析 JSON 数据
-            try {
-                if (reader.parse(res->body.c_str(), root)) {
-                    for (const auto& item : root) {
-					// 遍历JSON数组并将站点信息存储到结构体中
-					TriggerInfo trigger;
-					trigger.stationID = stoi(item[7].asString());
-					//trigger.Mean = stoi(item[8].asString());
-					trigger.Value = (stoi(item[9].asString()) - stoi(item[8].asString())) * 1.0 / 2048 * 5.0;
-					trigger.time = GPSTime(stoi(item[0].asString()), stoi(item[1].asString()), stoi(item[2].asString()),
-						stoi(item[3].asString()), stoi(item[4].asString()), stoi(item[5].asString()), stoi(item[6].asString()) * 1.0 / 1e9);
-                    allTriggers_.push_back(trigger);
-                    }
-                    cout << "Trigger info obtained from api: " << allTriggers_.size() << endl << endl;
+        // 解析 JSON 数据
+        try {
+            if (reader.parse(res->body.c_str(), root)) {
+                for (const auto& item : root) {
+                    // 遍历JSON数组并将站点信息存储到结构体中
+                    TriggerInfo trigger;
+                    trigger.stationID = stoi(item[7].asString());
+                    //trigger.Mean = stoi(item[8].asString());
+                    trigger.Value = (stoi(item[9].asString()) - stoi(item[8].asString())) * 1.0 / 2048 * 5.0;
+                    trigger.time = GPSTime(stoi(item[0].asString()), stoi(item[1].asString()), stoi(item[2].asString()),
+                        stoi(item[3].asString()), stoi(item[4].asString()), stoi(item[5].asString()), stoi(item[6].asString()) * 1.0 / 1e9);
+                    alltriggers.push_back(trigger);
                 }
-                else {
-                    std::cerr << "Failed to parse JSON response" << std::endl;
-                }
+                cout << "Trigger info obtained from api: " << alltriggers.size() << endl << endl;
             }
-            catch (const Json::Exception& e) {
-                // 捕获其他 Json::Exception 异常
-                std::cout << "parsing fault!: " << e.what() << std::endl;
+            else {
+                std::cerr << "Failed to parse JSON response" << std::endl;
             }
-        
+        }
+        catch (const Json::Exception& e) {
+            // 捕获其他 Json::Exception 异常
+            std::cout << "parsing fault!: " << e.what() << std::endl;
+        }
+
+    }
+}
+vector<TriggerInfo> Parser::GetTriggersData() {
+    vector<TriggerInfo> allTriggers_;
+    httplib::Client client(config_["trigger"]["url"].as<string>());
+    auto mode = config_["mode"].as<string>();
+    if (mode == "reProcess")
+    {        
+        GPSTime st_time(config_["reProcess"]["startTime"].as<string>());
+        GPSTime end_time(config_["reProcess"]["endTime"].as<string>());
+        while (st_time < end_time)
+        {
+            st_time += GPSTime("00000000T001000");
+            auto res = client.Get(config_["trigger"]["api_nt"].as<string>() + st_time.str() + "/10");
+            parse_result(res,allTriggers_);
+        }
+    }
+    else if (mode == "realtime")
+    {
+        auto res = client.Get(config_["trigger"]["api"].as<string>());
+        parse_result(res, allTriggers_);
     }
     return allTriggers_;
 }
