@@ -14,9 +14,9 @@ LocSta FinalGeoLocation(vector<LocSta> Stations, vector<double> Loc_Time, LocSta
 
 	for (int m = 1; m != Stations.size(); ++m)
 	{
-		pDiffBe2s[m] = (Loc_Time[m] - Loc_Time[m - 1]) * cVeo*0.99;
+		pDiffBe2s[m] = (Loc_Time[m] - Loc_Time[m - 1]) * cVeo;
 	}
-	pDiffBe2s[0] = (Loc_Time[0] - Loc_Time[Loc_Time.size() - 1]) * cVeo * 0.99;
+	pDiffBe2s[0] = (Loc_Time[0] - Loc_Time[Loc_Time.size() - 1]) * cVeo;
 
 	//for (int i = 0; i != Stations.size(); ++i)
 	//{
@@ -25,7 +25,7 @@ LocSta FinalGeoLocation(vector<LocSta> Stations, vector<double> Loc_Time, LocSta
 
 	LocPara locPara_S;
 
-	locPara_S.Lat = 0.00005 * PI / 180;
+	locPara_S.Lat = 0.0005 * PI / 180;
 	locPara_S.boundW = (result.Lon - 0.016) * PI / 180;
 	locPara_S.boundS = (result.Lat - 0.016) * PI / 180;
 	locPara_S.boundE = (result.Lon + 0.0162001) * PI / 180;
@@ -37,7 +37,7 @@ LocSta FinalGeoLocation(vector<LocSta> Stations, vector<double> Loc_Time, LocSta
 	if (locPara_S.boundht > 20)
 		locPara_S.boundht = 20;
 
-	locPara_S.dh = 0.005;
+	locPara_S.dh = 0.05;
 	LocCuda New_loccuda_Final;
 	New_loccuda_Final.GetLocPara(locPara_S, pLocSta, NumOfSta);
 	resultFinal = New_loccuda_Final.Location3D_GPU(pDiffBe2s, NumOfSta);
@@ -69,9 +69,9 @@ LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time)
 
 	for (int m = 1; m != Stations.size(); ++m)
 	{
-		pDiffBe2s[m] = (Loc_Time[m] - Loc_Time[m - 1]) * cVeo * 0.99;
+		pDiffBe2s[m] = (Loc_Time[m] - Loc_Time[m - 1]) * cVeo;
 	}
-	pDiffBe2s[0] = (Loc_Time[0] - Loc_Time[Loc_Time.size() - 1]) * cVeo * 0.99;
+	pDiffBe2s[0] = (Loc_Time[0] - Loc_Time[Loc_Time.size() - 1]) * cVeo;
 
 	//for (int i = 0; i != Stations.size(); ++i)
 	//{
@@ -97,11 +97,11 @@ LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time)
 		//New_loccuda.GetLocPara(locPara_S, pLocSta, NumOfSta);
 		//result = New_loccuda.Location3D_GPU(pDiffBe2s, NumOfSta);
 
-		locPara_S.Lat = 0.001 * PI / 180;
-		locPara_S.boundW = (result.Lon - 0.032) * PI / 180;
-		locPara_S.boundS = (result.Lat - 0.032) * PI / 180;
-		locPara_S.boundE = (result.Lon + 0.032001) * PI / 180;
-		locPara_S.boundN = (result.Lat + 0.032001) * PI / 180;
+		locPara_S.Lat = 0.002 * PI / 180;
+		locPara_S.boundW = (result.Lon - 0.064) * PI / 180;
+		locPara_S.boundS = (result.Lat - 0.064) * PI / 180;
+		locPara_S.boundE = (result.Lon + 0.064001) * PI / 180;
+		locPara_S.boundN = (result.Lat + 0.064001) * PI / 180;
 		locPara_S.boundht = result.h + 3.2;
 		locPara_S.boundhb = result.h - 3.2;
 		if (locPara_S.boundhb < 0)

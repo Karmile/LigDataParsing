@@ -84,7 +84,7 @@ void Parser::parse_result(const httplib::Result &res, vector<TriggerInfo>&alltri
                     //trigger.Mean = stoi(item[8].asString());
                     trigger.Value = (stoi(item[9].asString()) - stoi(item[8].asString())) * 1.0 / 2048 * 5.0;
                     trigger.time = GPSTime(stoi(item[0].asString()), stoi(item[1].asString()), stoi(item[2].asString()),
-                        stoi(item[3].asString()), stoi(item[4].asString()), stoi(item[5].asString()), stoi(item[6].asString()) * 1.0 / 1e9);
+                        stoi(item[3].asString()), stoi(item[4].asString()), stoi(item[5].asString()), stof(item[6].asString()) / 1.0e9);
                     alltriggers.push_back(trigger);
                 }
                 cout << "Trigger info obtained from api: " << alltriggers.size() << endl << endl;
