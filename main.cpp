@@ -303,8 +303,8 @@ int main() {
 				LocSta oneResult = FinalGeoLocation(Stations_One, Loc_Time_One, result);
 				CountLocationPoints++;
 				cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
-				cout << "GeoLocation call times: " << CountGeoLocationTimes << endl;
-				cout << "Location Points: " << CountLocationPoints << endl;
+		/*		cout << "GeoLocation call times: " << CountGeoLocationTimes << endl;
+				cout << "Location Points: " << CountLocationPoints << endl;*/
 				int cc = 1;
 
 				////////////////////
