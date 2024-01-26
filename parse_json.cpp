@@ -110,7 +110,7 @@ vector<TriggerInfo> Parser::GetTriggersData() {
         GPSTime end_time(config_["reProcess"]["endTime"].as<string>());
         while (st_time < end_time)
         {
-            st_time += GPSTime("00000000T001000");
+            st_time += Duration("00000000T001000");
             auto res = client.Get(config_["trigger"]["api_nt"].as<string>() + st_time.str() + "/10");
             parse_result(res,allTriggers_);
         }

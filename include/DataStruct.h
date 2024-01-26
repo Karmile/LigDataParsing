@@ -6,6 +6,62 @@
 
 using namespace std;
 
+struct Duration
+{
+	Duration(void)
+	{
+		m_Year = 0;
+		m_Month = 0;
+		m_Day = 0;
+		m_Hour = 0;
+		m_Min = 0;
+		m_Sec = 0;
+	}
+	long long  second()const {
+		return m_Year * 31536000 + m_Month * 2592000 + m_Day * 86400 + m_Hour * 3600 + m_Min * 60 + m_Sec;
+	}
+	Duration(string input_str)
+	{
+		if (input_str.find("T") != 0 && input_str.length() == 15)
+		{
+			m_Year = stoi(input_str.substr(0, 4));
+			m_Month = stoi(input_str.substr(4, 2));
+			m_Day = stoi(input_str.substr(6, 2));
+			m_Hour = stoi(input_str.substr(9, 2));
+			m_Min = stoi(input_str.substr(11, 2));
+			m_Sec = stoi(input_str.substr(13, 2));
+		}
+		else if (input_str.length() == 14)
+		{
+			m_Year = stoi(input_str.substr(0, 4));
+			m_Month = stoi(input_str.substr(4, 2));
+			m_Day = stoi(input_str.substr(6, 2));
+			m_Hour = stoi(input_str.substr(8, 2));
+			m_Min = stoi(input_str.substr(10, 2));
+			m_Sec = stoi(input_str.substr(12, 2));
+
+		}
+		else
+		{
+
+			m_Year = 0;
+			m_Month = 0;
+			m_Day = 0;
+			m_Hour = 0;
+			m_Min = 0;
+			m_Sec = 0;
+
+		}
+
+	}
+	int m_Year;
+	int m_Month;
+	int m_Day;
+	int m_Hour;
+	int m_Min;
+	int m_Sec;
+};
+
 struct GPSTime
 {
 	GPSTime(void)
@@ -21,7 +77,7 @@ struct GPSTime
 		m_ActPointSec = 0;
 	}
 
-	GPSTime(int input_Year, int input_Month, int input_Day, int input_Hour, int input_Min, int input_Sec, double input_ActPointSec, bool isTimeVaild = true, bool isTimeConfirm = true)
+	GPSTime(int input_Year, int input_Month, int input_Day, int input_Hour, int input_Min, int input_Sec, double input_ActPointSec = 0, bool isTimeVaild = true, bool isTimeConfirm = true)
 	{
 		m_isTimeVaild = isTimeVaild;
 		m_isTimeConfirm = isTimeConfirm;
@@ -127,32 +183,13 @@ struct GPSTime
 		return (s1.m_Year - s2.m_Year)*1e10+(s1.m_Month - s2.m_Month)*1e8+(s1.m_Day - s2.m_Day)*1e6+(s1.m_Hour - s2.m_Hour)*1e4+(s1.m_Min - s2.m_Min)*1e2+(s1.m_Sec - s2.m_Sec)+s1.m_ActPointSec - s2.m_ActPointSec;
 	}
 
-	GPSTime operator+= (const GPSTime& s2)
+	GPSTime operator+= (const Duration& s2)
 	{
-		GPSTime res;
-		m_Sec = (m_Sec + s2.m_Sec) % 60;
-		int carrySecs = (m_Sec + s2.m_Sec) / 60;
-		m_Min = (m_Min + s2.m_Min + carrySecs) % 60;
-		int carryMins = (m_Min + s2.m_Min + carrySecs) / 60;
-		m_Hour = (m_Hour + s2.m_Hour + carryMins) % 24;
-		int carryHours = (m_Hour + s2.m_Hour + carryMins) / 24;
-		// 计算日期，并考虑月底和年底的特殊情况
-		int maxDays = 31;
-		if (m_Month == 2)
-		{
-			maxDays = (m_Year % 4 == 0 && m_Year % 100 != 0) || m_Year % 400 == 0 ? 29 : 28;
-		}
-		else if (m_Month == 4 || m_Month == 6 || m_Month == 9 || m_Month == 11)
-		{
-			maxDays = 30;
-		}
-		m_Day = (m_Day + s2.m_Day + carryHours) % (maxDays + 1);
-		int carryDays = (m_Day + s2.m_Day + carryHours) / (maxDays + 1);
-
-		m_Month = (m_Month + s2.m_Month + carryDays - 1) % 12 + 1;
-		int carryMonths = (m_Month + s2.m_Month + carryDays - 1) / 12;
-
-		m_Year = m_Year + s2.m_Year + carryMonths;
+		tm tm_{ m_Sec, m_Min, m_Hour, m_Day, m_Month - 1,m_Year - 1900 }; // 2022-01-01 12:00:00
+		time_t time = std::mktime(&tm_);
+		time += s2.second();
+		tm_ = *std::localtime(&time);
+		*this = GPSTime(tm_.tm_year + 1900,tm_.tm_mon + 1, tm_.tm_mday, tm_.tm_hour, tm_.tm_min, tm_.tm_sec);
 		return *this;
 	}
 	string str() const {
@@ -280,3 +317,5 @@ struct TriggerPointInformation
 	unsigned int Mean;
 	unsigned int Value;
 };
+
+
