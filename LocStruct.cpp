@@ -121,22 +121,27 @@ LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time)
 }
 // add optimise solution 
 
-struct DynamicCostFunctor {
-	const std::vector<double>& t;
-	const vector<LocSta>& stations_;
+struct CostFunctor {
+	const std::vector<double>& t_;
+	const std::vector<LocSta>& stations_;
 
-	DynamicCostFunctor(const std::vector<double>& t, const vector<LocSta>& stations)
-		: t(t), stations_(stations) {}
+	CostFunctor(const std::vector<double>& t, const vector<LocSta>& stations)
+		: t_(t), stations_(stations) {}
 	template <typename T>
 	bool operator()(const T* const params, T* residual) const {
-		for (size_t i = 0; i < stations_.size(); i++) {
+		for (int i = 0; i < stations_.size(); i++) {
 			auto& st = stations_[i];
-			T hdist_ = sqrt(pow((T(st.Lon) - params[0]), 2) + pow((T(st.Lat) - params[1]), 2));
-			T hdist = hdist_ * R;
+			T dlon = T(st.Lon) - params[1];
+			T dlat = T(st.Lat) - params[0];
+			T a = sin(dlat / T(2)) * sin(dlat / T(2)) +
+				cos(params[0]) * cos(T(st.Lat)) *
+				sin(dlon / T(2)) * sin(dlon / T(2));
+			T c = T(2) * atan2(sqrt(a), sqrt(T(1) - a));
+			T hdist = c * R;
 			T dist = sqrt(pow((T(st.h) - params[2]), 2) + pow(hdist, 2));
 			T tt = dist / cVeo;
-			T t_diff = T(t[i]) - tt - params[3];
-			residual[i] = t_diff;
+			T diff = T(t_[i]) - tt - params[3];
+			residual[i] = diff;
 		}
 
 		return true;
@@ -148,33 +153,22 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time) {
 	ceres::Problem problem;
 
 	// 添加参数
-	double params[4] = { 5.0, 5.00, 10.0, Loc_Time.back() }; // 初始参数
-	problem.AddParameterBlock(params, 4);
-
-	//// 添加残差项
-	//ceres::DynamicAutoDiffCostFunction<DynamicCostFunctor>* cost_function =
-	//	new ceres::DynamicAutoDiffCostFunction<DynamicCostFunctor>(
-	//		new DynamicCostFunctor(Loc_Time, Stations));
-	//cost_function->SetNumResiduals(Stations.size());
-	//// 实例化模板函数为特定类型
-	//ceres::ResidualBlockId residual_block_id;
-	//ceres::internal::VariadicAutoDiff<DynamicAutoDiffCostFunction, double,
-	//	ceres::DYNAMIC, DynamicAutoDiffCostFunction::kNumResiduals,
-	//	ceres::DYNAMIC, DynamicAutoDiffCostFunction::kParameterBlockSize>
-	//	::Differentiate(cost_function, params, &residual_block_id);
-	//problem.AddResidualBlock(cost_function, nullptr, params);
-
-	//// 配置求解选项
-	//ceres::Solver::Options options;
-	//options.linear_solver_type = ceres::DENSE_SCHUR;
-	//options.minimizer_progress_to_stdout = true;
-
-	//// 求解
-	//ceres::Solver::Summary summary;
-	//ceres::Solve(options, &problem, &summary);
-
-	// 输出结果
-	//std::cout << summary.BriefReport() << std::endl;
+	double params[4] = { 0.5, 2.0, 0.0, Loc_Time.back() }; // 初始参数
+	
+	// 添加残差项
+	ceres::CostFunction* cost_function
+		= new ceres::AutoDiffCostFunction<CostFunctor, ceres::DYNAMIC, 4>(
+			new CostFunctor(Loc_Time, Stations),Stations.size());
+	problem.AddResidualBlock(cost_function, nullptr, params);
+	// 配置求解选项
+	ceres::Solver::Options options;
+	options.linear_solver_type = ceres::DENSE_QR;
+	options.minimizer_progress_to_stdout = true;
+	// 求解
+	ceres::Solver::Summary summary;
+	ceres::Solve(options, &problem, &summary);
+	 //输出结果
+	std::cout << summary.BriefReport() << std::endl;
 	std::cout << "Estimated parameters: ";
 	for (int i = 0; i < 4; ++i) {
 		if (i < 2)

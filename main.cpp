@@ -324,7 +324,7 @@ int main() {
 					}
 
 					LocSta oneResult = GeoLocation(Stations_One, Loc_Time_One);
-					//LocSta oneResult1 = GeoLocation_OP(Stations_One, Loc_Time_One);
+					LocSta oneResult1 = GeoLocation_OP(Stations_One, Loc_Time_One);
 					CountGeoLocationTimes++;
 
 					if (oneResult.sq < MinSq)
