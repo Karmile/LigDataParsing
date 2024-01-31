@@ -147,38 +147,50 @@ struct CostFunctor {
 		return true;
 	}
 };
-LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time) {
 
-	// ¹¹½¨ Ceres ÎÊÌâ
+LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta initResult) {
+
+	// ï¿½ï¿½ï¿½ï¿½ Ceres ï¿½ï¿½ï¿½ï¿½
 	ceres::Problem problem;
 
-	// Ìí¼Ó²ÎÊı
-	double params[4] = { 0.5, 2.0, 0.0, Loc_Time.back() }; // ³õÊ¼²ÎÊı
-	
-	// Ìí¼Ó²Ğ²îÏî
+	// ï¿½ï¿½ï¿½Ó²ï¿½ï¿½ï¿½
+	double params[4] = { 0.5, 2.0, 0.0, Loc_Time.back() }; // ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½
+	//åˆ¤æ–­resultè¾“å…¥æ˜¯å¦å­˜åœ¨
+	if (initResult.Lat != 0 && initResult.Lon != 0 && initResult.h != 0)
+	{
+		params[0] = initResult.Lat*degree2radians;
+		params[1] = initResult.Lon*degree2radians;
+		params[2] = initResult.h;
+		params[3] = Loc_Time.back();
+	}
+
+	// ï¿½ï¿½ï¿½Ó²Ğ²ï¿½ï¿½ï¿½
 	ceres::CostFunction* cost_function
 		= new ceres::AutoDiffCostFunction<CostFunctor, ceres::DYNAMIC, 4>(
 			new CostFunctor(Loc_Time, Stations),Stations.size());
 	problem.AddResidualBlock(cost_function, nullptr, params);
-	// ÅäÖÃÇó½âÑ¡Ïî
+	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½
 	ceres::Solver::Options options;
-	options.linear_solver_type = ceres::DENSE_QR;
-	options.minimizer_progress_to_stdout = true;
-	// Çó½â
+	// è®¾ç½®ä½¿ç”¨LMç®—æ³•æ±‚è§£
+
+	options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
+	options.minimizer_progress_to_stdout = false;
+	// ï¿½ï¿½ï¿½
 	ceres::Solver::Summary summary;
 	ceres::Solve(options, &problem, &summary);
-	 //Êä³ö½á¹û
-	std::cout << summary.BriefReport() << std::endl;
-	std::cout << "Estimated parameters: ";
+	 //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	//std::cout << summary.BriefReport() << std::endl;
+	//std::cout << "Estimated parameters: ";
 	for (int i = 0; i < 4; ++i) {
 		if (i < 2)
 		{
 			params[i] *= radians2degree;
 		}
-		std::cout << params[i] << " ";
+		//std::cout << params[i] << " ";
 	}
-	std::cout << std::endl;
+	//std::cout << std::endl;
 	LocSta result(params[0], params[1], params[2]);
+	result.sq = sqrt(summary.final_cost/ Stations.size()) * cVeo;
 
 	return result;
 }

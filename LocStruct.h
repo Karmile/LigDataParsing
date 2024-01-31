@@ -73,4 +73,4 @@ LocSta FinalGeoLocation(vector<LocSta> Stations, vector<double> Loc_Time, LocSta
 
 // Initial location in CUDA Loc
 LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time);
-LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time);
+LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta initResult = LocSta(0.0, 0.0, 0.0));
