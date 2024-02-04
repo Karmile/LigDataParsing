@@ -132,7 +132,8 @@ void permuteVector(vector<vector<TriggerInfo>>triggers, vector<TriggerInfo>& cur
 		bool valid{ true };
 		auto& tri{ triggers[index][i] };
 		for (const auto& element : current) {
-			if (abs(tri.time - element.time) > siteTimeMap[element.stationID][tri.stationID]) {
+			// add 0.0001
+			if (abs(tri.time - element.time) > siteTimeMap[element.stationID][tri.stationID]+0.0001) {
 				valid = false;
 				break;
 			}
@@ -333,7 +334,7 @@ int main() {
 				}
 			}
 
-			if (MinSq < 50.0)
+			if (MinSq < 30.0)
 			{
 				vector<TriggerInfo>& oneComb = locCombinationPool[finalCombIdx];
 

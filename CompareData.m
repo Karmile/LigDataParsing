@@ -1,10 +1,6 @@
 close all
 clear all
 
-
-
-
-
 %% NEwData
 data = load("NewData2.txt");
 
@@ -12,8 +8,8 @@ lat = data(:,2);
 lon = data(:,3);
 sq = data(:, 5);
 
-lat = lat(sq<10000000);
-lon = lon(sq<10000000);
+lat = lat(sq<5);
+lon = lon(sq<5);
 
 figure;
 worldmap([10 40],[100 135]);  % 修改地图范围
@@ -31,8 +27,8 @@ lat = data(:,2);
 lon = data(:,3);
 sq = data(:, 5);
 
-lat = lat(sq<10000000);
-lon = lon(sq<10000000);
+lat = lat(sq<10);
+lon = lon(sq<10);
 
 plotm(coastlat, coastlon, 'k')
 

@@ -173,7 +173,7 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 	ceres::Solver::Options options;
 	// 设置使用LM算法求解
 
-	options.linear_solver_type = ceres::DENSE_NORMAL_CHOLESKY;
+	options.linear_solver_type = ceres::DENSE_QR;
 	options.minimizer_progress_to_stdout = false;
 	// ���
 	ceres::Solver::Summary summary;
