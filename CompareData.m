@@ -2,7 +2,7 @@ close all
 clear all
 
 %% NEwData
-data = load("NewData2.txt");
+data = load("lig_txt/NewData2.txt");
 
 lat = data(:,2);
 lon = data(:,3);
@@ -20,26 +20,28 @@ plotm(coastlat, coastlon, 'k')
 hold on;
 
     scatterm(lat, lon, 3, 'filled','b');
+  
+    % legend('b','optimize');
 
-data = load("NewData.txt");
-
+data = load("lig_txt/NewData.txt");
 lat = data(:,2);
 lon = data(:,3);
-sq = data(:, 5);
+sq = data(:, 5); 
 
 lat = lat(sq<10);
 lon = lon(sq<10);
 
-plotm(coastlat, coastlon, 'k')
+% plotm(coastlat, coastlon, 'k')
 
 hold on;
 
     scatterm(lat, lon, 3, 'filled','r');
 
 
+
 %%
 % 读取json格式的文本文件
-fid = fopen('USTCData.txt');
+fid = fopen('lig_txt/USTCData.txt');
 raw = fread(fid,inf);
 str = char(raw');
 fclose(fid);
@@ -60,7 +62,7 @@ end
 hold on;
 
 scatterm(lat, lon, 3, 'filled', 'g')
-
+title('添加优化边界限制')
 
 
 

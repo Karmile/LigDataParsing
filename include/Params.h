@@ -34,3 +34,19 @@ static double sqLevel = 0.3;
 static GPSTime pastFileTime;
 static unsigned long long CountGeoLocationTimes = 0;
 static unsigned long long CountLocationPoints = 0;
+struct Bounds {
+	Bounds(double boundW_, double boundE_, double boundS_, double boundN_, double boundhb_, double boundht_) {
+		boundW = boundW_ * degree2radians;
+		boundE = boundE_ * degree2radians;
+		boundS = boundS_ * degree2radians;
+		boundN = boundN_ * degree2radians;
+		boundhb = boundhb_;
+		boundht = boundht_;
+	}
+	double boundW;
+	double boundE;
+	double boundS;
+	double boundN;
+	double boundhb;
+	double boundht;
+};

@@ -154,7 +154,7 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 	ceres::Problem problem;
 
 	// ���Ӳ���
-	double params[4] = { 0.5, 2.0, 0.0, Loc_Time.back() }; // ��ʼ����
+	double params[4] = { 0.5, 2.0, 1.0, Loc_Time.back() }; // ��ʼ����
 	//判断result输入是否存在
 	if (initResult.Lat != 0 && initResult.Lon != 0 && initResult.h != 0)
 	{
@@ -170,6 +170,13 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 			new CostFunctor(Loc_Time, Stations),Stations.size());
 	problem.AddResidualBlock(cost_function, nullptr, params);
 	// �������ѡ��
+	Bounds para = Bounds(0, 140, 0, 40, 0, 50);
+	problem.SetParameterLowerBound(params, 0, para.boundS);
+	problem.SetParameterUpperBound(params, 0, para.boundN);
+	problem.SetParameterLowerBound(params, 1, para.boundW);
+	problem.SetParameterUpperBound(params, 1, para.boundE);
+	problem.SetParameterLowerBound(params, 2, para.boundhb);
+	problem.SetParameterUpperBound(params, 2, para.boundht);
 	ceres::Solver::Options options;
 	// 设置使用LM算法求解
 
@@ -179,8 +186,8 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 	ceres::Solver::Summary summary;
 	ceres::Solve(options, &problem, &summary);
 	 //������
-	//std::cout << summary.BriefReport() << std::endl;
-	//std::cout << "Estimated parameters: ";
+	std::cout << summary.BriefReport() << std::endl;
+	std::cout << "Estimated parameters: ";
 	for (int i = 0; i < 4; ++i) {
 		if (i < 2)
 		{
@@ -190,7 +197,7 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 	}
 	//std::cout << std::endl;
 	LocSta result(params[0], params[1], params[2]);
-	result.sq = sqrt(summary.final_cost/ Stations.size()) * cVeo;
+	result.sq = sqrt(summary.final_cost)/ Stations.size() * cVeo;
 
 	return result;
 }
