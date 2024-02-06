@@ -8,8 +8,8 @@ lat = data(:,2);
 lon = data(:,3);
 sq = data(:, 5);
 
-lat = lat(sq<5);
-lon = lon(sq<5);
+lat = lat(sq<10);
+lon = lon(sq<10);
 
 figure;
 worldmap([10 40],[100 135]);  % 修改地图范围

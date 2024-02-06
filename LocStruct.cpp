@@ -186,8 +186,8 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 	ceres::Solver::Summary summary;
 	ceres::Solve(options, &problem, &summary);
 	 //������
-	std::cout << summary.BriefReport() << std::endl;
-	std::cout << "Estimated parameters: ";
+	//std::cout << summary.BriefReport() << std::endl;
+	//std::cout << "Estimated parameters: ";
 	for (int i = 0; i < 4; ++i) {
 		if (i < 2)
 		{
@@ -197,7 +197,7 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 	}
 	//std::cout << std::endl;
 	LocSta result(params[0], params[1], params[2]);
-	result.sq = sqrt(summary.final_cost)/ Stations.size() * cVeo;
+	result.sq = sqrt(summary.final_cost/ Stations.size()) * cVeo;
 
 	return result;
 }

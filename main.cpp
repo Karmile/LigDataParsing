@@ -249,9 +249,7 @@ int main() {
 	shared_lock<shared_mutex>lock(rwMutex);
 	auto start = std::chrono::high_resolution_clock::now();
 
-	ofstream outfile_G;
 	ofstream outfile_O;
-	outfile_G.open("lig_txt/NewData.txt", ios::out);
 	outfile_O.open("lig_txt/NewData2.txt", ios::out);
 
 	while (allTriggers.size())
@@ -325,47 +323,49 @@ int main() {
 				}
 
 				//LocSta oneResult = GeoLocation(Stations_One, Loc_Time_One);
-				LocSta oneResult1 = GeoLocation_OP(Stations_One, Loc_Time_One);
-				cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult1.Lat << " " << oneResult1.Lon << " " << oneResult1.h << " " << oneResult1.sq << endl;
-				outfile_O << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult1.Lat << " " << oneResult1.Lon << " " << oneResult1.h << " " << oneResult1.sq << endl;
-				//CountGeoLocationTimes++;
+				LocSta oneResult = GeoLocation_OP(Stations_One, Loc_Time_One);
 
-				//if (oneResult.sq < MinSq)
-				//{
-				//	MinSq = oneResult.sq;
-				//	result = oneResult;
-				//	finalCombIdx = m;
-				//}
+				/*cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult1.Lat << " " << oneResult1.Lon << " " << oneResult1.h << " " << oneResult1.sq << endl;
+				outfile_O << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult1.Lat << " " << oneResult1.Lon << " " << oneResult1.h << " " << oneResult1.sq << endl;
+			*/	
+				CountGeoLocationTimes++;
+
+				if (oneResult.sq < MinSq)
+				{
+					MinSq = oneResult.sq;
+					result = oneResult;
+					finalCombIdx = m;
+				}
 			}
 
 			if (MinSq < 30.0)
 			{
-				//vector<TriggerInfo>& oneComb = locCombinationPool[finalCombIdx];
+				vector<TriggerInfo>& oneComb = locCombinationPool[finalCombIdx];
 
-				//vector<double> Loc_Time_One;
-				//vector<LocSta> Stations_One;
+				vector<double> Loc_Time_One;
+				vector<LocSta> Stations_One;
 
-				//for (int j = 0; j < oneComb.size(); ++j)
-				//{
-				//	Loc_Time_One.push_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
-				//	Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
-				//}
+				for (int j = 0; j < oneComb.size(); ++j)
+				{
+					Loc_Time_One.push_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
+					Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
+				}
 
-				//LocSta oneResult = result;
+				LocSta oneResult = result;
 				//oneResult = FinalGeoLocation(Stations_One, Loc_Time_One, result);
-				////oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, result);
+				//oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, result);
 
-				//CountLocationPoints++;
-				//cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
+				CountLocationPoints++;
+				cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
 				
-				// 把cout的内容写入NewData.txt里，调试使用
+				 //把cout的内容写入NewData.txt里，调试使用
 
-				// 改成覆盖写入模式
-				//outfile_G << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
+				 //改成覆盖写入模式
+				outfile_O << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
 
 				/*		cout << "GeoLocation call times: " << CountGeoLocationTimes << endl;
 						cout << "Location Points: " << CountLocationPoints << endl;*/
-				//int cc = 1;
+				int cc = 1;
 
 				////////////////////
 				////////////////////
@@ -391,7 +391,6 @@ int main() {
 
 		// 输出经过的时间
 	}
-	outfile_G.close();
 	outfile_O.close();
 	// 获取当前时间点
 	auto end = std::chrono::high_resolution_clock::now();
