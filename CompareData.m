@@ -1,6 +1,15 @@
 close all
 clear all
-
+% figure;
+% worldmap([10 40],[100 135]);  % 修改地图范围
+% load coastlines;
+% 
+% plotm(coastlat, coastlon, 'k')
+% 
+% hold on;
+% lat =[0.514705122,0.569870949,0.523494065]*57.3248;
+% lon = [2.07061672,2.01754308,1.88706219]*57.3248;
+%     scatterm(lat, lon, 3, 'filled','r');
 %% NEwData
 data = load("lig_txt/NewData2.txt");
 

@@ -12,3 +12,4 @@ mode: reProcess   # realTime
 reProcess:
   startTime: 20230701T000000
   endTime: 20230701T002000
+checkTheta: 45

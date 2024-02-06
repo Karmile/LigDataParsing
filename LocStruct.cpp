@@ -4,6 +4,12 @@
 #include "ceres/ceres.h"
 #include "glog/logging.h"
 #include <Eigen/Core>
+#include "yaml-cpp/yaml.h"
+
+std::string configFile = (".\\config.yaml");
+YAML::Node config = YAML::LoadFile(configFile);
+
+
 LocSta FinalGeoLocation(vector<LocSta> Stations, vector<double> Loc_Time, LocSta result)
 {
 	int NumOfSta = Stations.size();
@@ -148,6 +154,43 @@ struct CostFunctor {
 	}
 };
 
+bool check_location_structure(const vector<LocSta>& Stations, LocSta& result) {
+	bool valid{ true };
+	Cartesian O = Cartesian(result.Lat,result.Lon);
+	Cartesian P1 = Cartesian(result.Lat, result.Lon);
+	Cartesian P2 = Cartesian(result.Lat, result.Lon);
+	double u1{0.0}, u2{ 0.0 }, u3{ 0.0 }, v1{ 0.0 }, v2{ 0.0 }, v3{ 0.0 }, 
+		ulength{ 0.0 }, vlength{ 0.0 }, dotproduct{ 0.0 }, theta{ 0.0 },max_theta{ 0.0 };
+	for (int i = 0; i < Stations.size() - 1; i++)
+	{
+		for (int j = i + 1; j < Stations.size(); j++)
+		{
+			P1 = Cartesian(Stations[i].Lat, Stations[i].Lon);
+			P2 = Cartesian(Stations[j].Lat, Stations[j].Lon);
+			u1 = O.x - P1.x;
+			u2 = O.y - P1.y;
+			u3 = O.z - P1.z;
+			v1 = O.x - P2.x;
+			v2 = O.y - P2.y;
+			v3 = O.z - P2.z;
+			ulength = sqrt(u1 * u1 + u2 * u2 + u3 * u3);
+			vlength = sqrt(v1 * v1 + v2 * v2 + v3 * v3);
+			dotproduct = u1 * v1 + u2 * v2 + u3 * v3;
+			theta = acos(dotproduct / (ulength * vlength)) * radians2degree;
+			double t = acos(1);
+			double t2 = acos(0);
+			max_theta = max(max_theta, theta);
+
+		}
+	}
+	if (max_theta < config["checkTheta"].as<double>())
+	{
+		result.sq = FLOAT_MAX;
+		valid = false;
+	}
+	return valid;
+}
+
 LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta initResult) {
 
 	// ���� Ceres ����
@@ -170,7 +213,7 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 			new CostFunctor(Loc_Time, Stations),Stations.size());
 	problem.AddResidualBlock(cost_function, nullptr, params);
 	// �������ѡ��
-	Bounds para = Bounds(0, 140, 0, 40, 0, 50);
+	Bounds para = Bounds(0, 140, 0, 40, 0, 20);
 	problem.SetParameterLowerBound(params, 0, para.boundS);
 	problem.SetParameterUpperBound(params, 0, para.boundN);
 	problem.SetParameterLowerBound(params, 1, para.boundW);
@@ -188,16 +231,11 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 	 //������
 	std::cout << summary.BriefReport() << std::endl;
 	std::cout << "Estimated parameters: ";
-	for (int i = 0; i < 4; ++i) {
-		if (i < 2)
-		{
-			params[i] *= radians2degree;
-		}
-		//std::cout << params[i] << " ";
-	}
-	//std::cout << std::endl;
 	LocSta result(params[0], params[1], params[2]);
 	result.sq = sqrt(summary.final_cost)/ Stations.size() * cVeo;
+	check_location_structure(Stations, result);
+	result.Lat *= radians2degree;
+	result.Lon *= radians2degree;
 
 	return result;
 }

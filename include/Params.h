@@ -12,7 +12,7 @@
 #define W_OK 2 /* Test for write permission.  */
 //#define   X_OK    1       /* execute permission - unsupported in windows*/
 #define F_OK 0 /* Test for existence.  */
-
+#define FLOAT_MAX 1000000000000
 #define Lattice 0.001
 #define boundaryW 90
 #define boundaryE (boundaryW+(4096)*0.01)
