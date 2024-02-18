@@ -1,10 +1,10 @@
 #include <iostream>
 #include <json/json.h>
 #include "yaml-cpp/yaml.h"
-#include "parse_json.h"
+#include "LigDataApi.h"
 #include "chrono"
 
-Parser::Parser(const std::string str) {
+LigDataApi::LigDataApi(const std::string str) {
     try {
         config_ = YAML::LoadFile(str);
         std::cout << "load config successfully!\n"  << endl;
@@ -16,7 +16,7 @@ Parser::Parser(const std::string str) {
 }
 
 // 定义结构体来存储站点信息
-vector<StationInfo> Parser::GetStationData(){
+vector<StationInfo> LigDataApi::GetStationData(){
     vector<StationInfo> sites_;
     httplib::Client client(config_["sites"]["url"].as<string>());
     auto res = client.Get(config_["sites"]["api"].as<string>());
@@ -70,7 +70,7 @@ vector<StationInfo> Parser::GetStationData(){
     return sites_;
 }
 
-void Parser::parse_result(const httplib::Result &res, vector<TriggerInfo>&alltriggers){
+void LigDataApi::parse_result(const httplib::Result &res, vector<TriggerInfo>&alltriggers){
     if (res && res->status == 200) {
         Json::Value root;
         Json::Reader reader;
@@ -82,7 +82,7 @@ void Parser::parse_result(const httplib::Result &res, vector<TriggerInfo>&alltri
                     TriggerInfo trigger;
                     trigger.stationID = stoi(item[7].asString());
                     //trigger.Mean = stoi(item[8].asString());
-                    trigger.Value = (stoi(item[9].asString()) - stoi(item[8].asString())) * 1.0 / 2048 * 5.0;
+                    trigger.Value = (stof(item[9].asString()) - stof(item[8].asString())) * 1.0 / 2048 * 5.0;
                     trigger.time = GPSTime(stoi(item[0].asString()), stoi(item[1].asString()), stoi(item[2].asString()),
                         stoi(item[3].asString()), stoi(item[4].asString()), stoi(item[5].asString()), stof(item[6].asString()) / 1.0e9);
                     alltriggers.push_back(trigger);
@@ -100,7 +100,7 @@ void Parser::parse_result(const httplib::Result &res, vector<TriggerInfo>&alltri
 
     }
 }
-vector<TriggerInfo> Parser::GetTriggersData() {
+vector<TriggerInfo> LigDataApi::GetTriggersData() {
     vector<TriggerInfo> allTriggers_;
     httplib::Client client(config_["trigger"]["url"].as<string>());
     auto mode = config_["mode"].as<string>();

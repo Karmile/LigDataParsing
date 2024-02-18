@@ -127,17 +127,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="LigTools.cpp" />
     <ClCompile Include="LocStruct.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="parse_json.cpp" />
+    <ClCompile Include="LigDataApi.cpp" />
+    <ClCompile Include="ThreadLoadData.cpp" />
+    <ClCompile Include="ThreadLoc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeoTools.h" />
     <ClInclude Include="GPSTimeAlgorithm.h" />
     <ClInclude Include="include\DataStruct.h" />
     <ClInclude Include="include\Params.h" />
+    <ClInclude Include="LigTools.h" />
     <ClInclude Include="LocStruct.h" />
-    <ClInclude Include="parse_json.h" />
+    <ClInclude Include="LigDataApi.h" />
+    <ClInclude Include="WorkThreads.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="config.yaml" />

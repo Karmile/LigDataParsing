@@ -161,7 +161,7 @@ public:
 		return OneTime;
 	}
 
-	static double GetPosixTime(double YY, double MM, double DD, double hh, double mm, double ss, double Acc)
+	static double GetPosixTime(int YY, int MM, int DD, int hh, int mm, int ss, double Acc)
 	{
 		struct tm tm;
 		memset(&tm, 0, sizeof(tm));

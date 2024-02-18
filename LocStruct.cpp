@@ -4,7 +4,13 @@
 #include "ceres/ceres.h"
 #include "glog/logging.h"
 #include <Eigen/Core>
-LocSta FinalGeoLocation(vector<LocSta> Stations, vector<double> Loc_Time, LocSta result)
+#include "yaml-cpp/yaml.h"
+
+std::string configFile = (".\\config.yaml");
+YAML::Node config = YAML::LoadFile(configFile);
+
+
+LocSta FinalGeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time, LocSta result)
 {
 	int NumOfSta = Stations.size();
 	LocSta *pLocSta = new LocSta[NumOfSta];
@@ -47,7 +53,7 @@ LocSta FinalGeoLocation(vector<LocSta> Stations, vector<double> Loc_Time, LocSta
 	return resultFinal;
 }
 
-LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time)
+LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time)
 {
 	LocPara locPara;
 	locPara.boundE = boundaryE * PI / 180;
@@ -114,7 +120,7 @@ LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time)
 		New_loccuda_Final.GetLocPara(locPara_S, pLocSta, NumOfSta);
 		result = New_loccuda_Final.Location3D_GPU(pDiffBe2s, NumOfSta);
 	}
-
+	//check_location_structure(Stations, result);
 	delete[] pDiffBe2s;
 	delete[] pLocSta;
 	return result;
@@ -170,7 +176,7 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 			new CostFunctor(Loc_Time, Stations),Stations.size());
 	problem.AddResidualBlock(cost_function, nullptr, params);
 	// �������ѡ��
-	Bounds para = Bounds(0, 140, 0, 40, 0, 50);
+	Bounds para = Bounds(0, 140, 0, 40, 0, 20);
 	problem.SetParameterLowerBound(params, 0, para.boundS);
 	problem.SetParameterUpperBound(params, 0, para.boundN);
 	problem.SetParameterLowerBound(params, 1, para.boundW);
@@ -182,22 +188,17 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 
 	options.linear_solver_type = ceres::DENSE_QR;
 	options.minimizer_progress_to_stdout = false;
+	
 	// ���
 	ceres::Solver::Summary summary;
 	ceres::Solve(options, &problem, &summary);
 	 //������
 	//std::cout << summary.BriefReport() << std::endl;
 	//std::cout << "Estimated parameters: ";
-	for (int i = 0; i < 4; ++i) {
-		if (i < 2)
-		{
-			params[i] *= radians2degree;
-		}
-		//std::cout << params[i] << " ";
-	}
-	//std::cout << std::endl;
 	LocSta result(params[0], params[1], params[2]);
 	result.sq = sqrt(summary.final_cost/ Stations.size()) * cVeo;
+	result.Lat *= radians2degree;
+	result.Lon *= radians2degree;
 
 	return result;
 }

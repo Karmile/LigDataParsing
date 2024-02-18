@@ -3,6 +3,7 @@
 #include "./ThirdParty/LigLocCuda3Dx64/include/LocCuda.h"
 #include "DataStruct.h"
 #include <vector>
+#include "GeoTools.h"
 
 using namespace  std;
 
@@ -69,8 +70,9 @@ struct locationInformation
 };
 
 // Final location in CUDA Loc
-LocSta FinalGeoLocation(vector<LocSta> Stations, vector<double> Loc_Time, LocSta result);
+LocSta FinalGeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time, LocSta result);
 
 // Initial location in CUDA Loc
-LocSta GeoLocation(vector<LocSta> Stations, vector<double> Loc_Time);
+LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time);
 LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta initResult = LocSta(0.0, 0.0, 0.0));
+bool check_location_structure(const vector<LocSta>& Stations, LocSta& result);
