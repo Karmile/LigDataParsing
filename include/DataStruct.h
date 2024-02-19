@@ -199,6 +199,12 @@ struct GPSTime
 		return std::string(buffer);
 	}
 	
+	void set_second(double sec)
+	{
+		m_Sec = static_cast<int>(sec);
+		m_ActPointSec = sec - m_Sec;
+	}
+
 	bool m_isTimeVaild;
 	bool m_isTimeConfirm;
 	int m_Year;
@@ -317,5 +323,6 @@ struct TriggerPointInformation
 	unsigned int Mean;
 	unsigned int Value;
 };
+
 
 

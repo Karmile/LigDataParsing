@@ -127,7 +127,10 @@ void ThreadLoc( vector<TriggerInfo> &allTriggers, map<int, StationInfo> &siteMap
 					cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
 					// 把cout的内容写入NewData.txt里，调试使用
 					// 改成覆盖写入模式
-					outfile_O << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
+					GPSTime lig_time = oneComb[0].time;
+					lig_time.set_second(oneResult.occur_t);
+					outfile_O << CGPSTimeAlgorithm::GetTimeStr(lig_time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
+					LigDataApi::PostLigResult(lig_time, oneResult, oneComb, siteMap);
 				}
 
 				// 需要删除的元素的索引

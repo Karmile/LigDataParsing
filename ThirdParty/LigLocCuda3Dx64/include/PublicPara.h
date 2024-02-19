@@ -23,18 +23,19 @@ struct LocPara{
 };
 
 struct LocSta{
-	LocSta(DATAPREC InLat, DATAPREC InLon, DATAPREC Inh)
+	LocSta(DATAPREC InLat, DATAPREC InLon, DATAPREC Inh, DATAPREC time = 0)
 	{
 		Lat = InLat;
 		Lon = InLon;
 		h = Inh;
+		occur_t = time;
 	}
 	LocSta()
 	{
-
 	}
 	DATAPREC Lat;
 	DATAPREC Lon;
 	DATAPREC h;
 	DATAPREC sq;
+	DATAPREC occur_t;
 };

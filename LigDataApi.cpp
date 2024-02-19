@@ -3,7 +3,9 @@
 #include "yaml-cpp/yaml.h"
 #include "LigDataApi.h"
 #include "chrono"
+#include "GPSTimeAlgorithm.h"
 
+YAML::Node LigDataApi::config_ = YAML::LoadFile(".\\config.yaml");
 LigDataApi::LigDataApi(const std::string str) {
     try {
         config_ = YAML::LoadFile(str);
@@ -121,5 +123,63 @@ vector<TriggerInfo> LigDataApi::GetTriggersData() {
         parse_result(res, allTriggers_);
     }
     return allTriggers_;
+}
+
+void LigDataApi::PostLigResult(const GPSTime& lig_time, const LocSta& res, const std::vector<TriggerInfo>& oneComb, std::map<int, StationInfo>& siteMap) {
+    httplib::Client client(config_["ligresult"]["url"].as<string>());
+    string total_names;
+    string total_IDs;
+    string total_infos;
+    std::stringstream ss;
+    for (const auto& iter : oneComb)
+    {
+        total_IDs += std::to_string(iter.stationID) + "+";
+        total_names += siteMap[iter.stationID].name + "+";
+        ss << "{"
+            << "\"id\":" << iter.stationID << ","
+            << "\"name\":\"" << siteMap[iter.stationID].name << "\","
+            << "\"value\":" << iter.Value << ","
+            << "\"peakCurrent\":" << "  "
+            << "},";
+    }
+    total_infos = ss.str();
+    // 去掉最后一个 "+" 和 ","字符串
+    if (!oneComb.empty()) {
+        total_IDs = total_IDs.substr(0, total_IDs.size() - 1);
+        total_names = total_names.substr(0, total_names.size() - 1);
+        total_infos = total_infos.substr(0, total_infos.size() - 1);
+        total_infos = "[" + total_infos + "]";
+    }
+
+    Json::Value data;
+    data["ExpTag"] = config_["expTag"].as<string>();
+    data["time"] = CGPSTimeAlgorithm::GetTimeStr(lig_time);
+    data["nano"] = lig_time.m_ActPointSec * 1e+9;
+    data["latitude"] = res.Lat;
+    data["longitude"] = res.Lon;
+    data["altitude"] = res.h;
+    data["residual"] = res.sq;
+    data["numOfSta"] = oneComb.size();
+    data["peakCurrent"] = " ";
+    data["type"] = (res.h < 2.0) ? "RS" : "IC";
+    data["datetime"] = lig_time.str();
+    data["nameOfSta"] = total_names;
+    data["IDOfSta"] = total_IDs;
+    data["infoOfSta"] = total_infos;
+    data["isDeleted"] = 0;
+    data["locationMethod"] = "TOA";
+
+    // 将Json::Value对象转换为JSON格式的字符串
+    Json::StreamWriterBuilder builder;
+    builder["commentStyle"] = "None";
+    builder["indentation"] = "   ";  // 设置缩进
+
+    std::string json_data = Json::writeString(builder, data);
+    // 发送 POST 请求，并设置请求头和 JSON 数据
+    auto result = client.Post(config_["ligresult"]["api"].as<string>() + "/1", json_data, "application/json");
+
+    if (result && result->status == 200) {
+        std::cout << "Request succeeded. Response: " << result->body << std::endl;
+    }
 }
 

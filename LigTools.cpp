@@ -32,8 +32,6 @@ bool LigTools::check_location_structure(const vector<LocSta> &Stations, LocSta &
 			vlength = sqrt(v1 * v1 + v2 * v2 + v3 * v3);
 			dotproduct = u1 * v1 + u2 * v2 + u3 * v3;
 			theta = acos(dotproduct / (ulength * vlength)) * radians2degree;
-			double t = acos(1);
-			double t2 = acos(0);
 			max_theta = max(max_theta, theta);
 		}
 	}

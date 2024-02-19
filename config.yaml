@@ -6,10 +6,14 @@ trigger:
   url: "http://222.195.83.28:18000"
   api: "/getHistoricalTrigger/20230719015506/10"
   api_nt: "/getHistoricalTrigger/"
+ligresult:
+  url: "http://112.26.166.27:18000"
+  api: "/writeLigResult"
 scale: 20
 waitTime: 60
 mode: reProcess   # realTime
 reProcess:
   startTime: 20230701T000000
-  endTime: 20230701T002000
+  endTime: 20230701T001000
 checkTheta: 45
+expTag: 021903

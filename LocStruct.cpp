@@ -195,10 +195,9 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 	 //������
 	//std::cout << summary.BriefReport() << std::endl;
 	//std::cout << "Estimated parameters: ";
-	LocSta result(params[0], params[1], params[2]);
+	LocSta result(params[0], params[1], params[2], params[3]);
 	result.sq = sqrt(summary.final_cost/ Stations.size()) * cVeo;
 	result.Lat *= radians2degree;
 	result.Lon *= radians2degree;
-
 	return result;
 }
