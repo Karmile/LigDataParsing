@@ -3,17 +3,19 @@ sites:
   url: "http://222.195.83.28:18000"
   api: "/getDetectionNetworkStatesApi"
 trigger: 
+  #url: "http://112.26.166.27:18000"
   url: "http://222.195.83.28:18000"
   api: "/getHistoricalTrigger/20230719015506/10"
   api_nt: "/getHistoricalTrigger/"
+  api_rt: "/getRealTimeTrigger/str/10"
 ligresult:
   url: "http://112.26.166.27:18000"
   api: "/writeLigResult"
 scale: 20
 waitTime: 60
-mode: reProcess   # realTime
+mode: reProcess   # realTime realTime
 reProcess:
-  startTime: 20230701T000000
-  endTime: 20230701T001000
+  startTime: 20230807T080000
+  endTime: 20230807T082000
 checkTheta: 45
-expTag: 021903
+expTag: 021905

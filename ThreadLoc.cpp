@@ -1,171 +1,184 @@
 #include "WorkThreads.h"
 
-void ThreadLoc( vector<TriggerInfo> &allTriggers, map<int, StationInfo> &siteMap, map<int, map<int, double>> &siteTimeMap, shared_mutex &rwMutex, YAML::Node config)
+void ThreadLoc(vector<TriggerInfo>& allTriggers, map<int, StationInfo>& siteMap, map<int, map<int, double>>& siteTimeMap, shared_mutex& rwMutex, YAML::Node config)
 {
-	// 开始定位
-	shared_lock<shared_mutex> lock(rwMutex);
-	auto start = std::chrono::high_resolution_clock::now();
-
-	ofstream outfile_O;
-	outfile_O.open("lig_txt/NewData2.txt", ios::out);
-
-	while (allTriggers.size())
-	{
-		map<int, triggerAtStation> triggerPool;
-
-		TriggerInfo &baseTrig = allTriggers[0];
-		vector<int> recycleIdx;
-		// recycleIdx.push_back(curLoopIdx);
-
-		// Wait time
-		// if((allTriggers.back().time - baseTrig.time) < config["waitTime"].as<double>()) continue;
-
-		for (int j = 0; j < allTriggers.size(); ++j)
+	static int current_size{ 1 };
+	while (1) {
+		if (current_size == allTriggers.size())
 		{
-			TriggerInfo &oneTrig = allTriggers[j];
-			int trigSiteID = oneTrig.stationID;
-			double diffTime = baseTrig.time - oneTrig.time;
-
-			if ((diffTime < -(0.003)) || (diffTime > 0))
-				break;
-
-			// std::cout << diffTime << endl;
-
-			if ((fabs(diffTime) < siteTimeMap[baseTrig.stationID][oneTrig.stationID]) || (baseTrig.stationID == oneTrig.stationID))
-			{
-				recycleIdx.push_back(j);
-
-				// 判断键值是否存在
-				if (triggerPool.find(trigSiteID) == triggerPool.end())
-				{
-					triggerAtStation oneTriggerAtStation;
-					oneTriggerAtStation.staLocation = (LocSta(siteMap[trigSiteID].latitude * degree2radians,
-															  siteMap[trigSiteID].longitude * degree2radians,
-															  siteMap[trigSiteID].altitude / 1000.0));
-					oneTriggerAtStation.stationID = trigSiteID;
-					oneTriggerAtStation.triggers.push_back(oneTrig);
-					oneTriggerAtStation.triggers.back().trigIdx = j;
-					triggerPool[trigSiteID] = oneTriggerAtStation;
-				}
-				else
-				{
-					triggerPool[trigSiteID].triggers.push_back(oneTrig);
-				}
-			}
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+			continue;
 		}
+		// 开始定位
+		shared_lock<shared_mutex> lock(rwMutex);
+		auto start = std::chrono::high_resolution_clock::now();
 
-		if ((triggerPool.size()) >= 5)
+		ofstream outfile_O;
+		outfile_O.open("lig_txt/NewData2.txt", ios::out);
+
+		while (allTriggers.size())
 		{
-			vector<vector<TriggerInfo>> locCombinationPool = LigTools::getLocationPool_p(triggerPool, siteTimeMap);
+			map<int, triggerAtStation> triggerPool;
 
-			if (locCombinationPool.size() == 0)
+			TriggerInfo& baseTrig = allTriggers[0];
+			vector<int> recycleIdx;
+			// recycleIdx.push_back(curLoopIdx);
+
+			// Wait time
+			// if((allTriggers.back().time - baseTrig.time) < config["waitTime"].as<double>()) continue;
+
+			for (int j = 0; j < allTriggers.size(); ++j)
 			{
-				allTriggers.erase(allTriggers.begin());
-				continue;
+				TriggerInfo& oneTrig = allTriggers[j];
+				int trigSiteID = oneTrig.stationID;
+				double diffTime = baseTrig.time - oneTrig.time;
+
+				if ((diffTime < -(0.003)) || (diffTime > 0))
+					break;
+
+				// std::cout << diffTime << endl;
+
+				if ((fabs(diffTime) < siteTimeMap[baseTrig.stationID][oneTrig.stationID]) || (baseTrig.stationID == oneTrig.stationID))
+				{
+					recycleIdx.push_back(j);
+
+					// 判断键值是否存在
+					if (triggerPool.find(trigSiteID) == triggerPool.end())
+					{
+						triggerAtStation oneTriggerAtStation;
+						oneTriggerAtStation.staLocation = (LocSta(siteMap[trigSiteID].latitude * degree2radians,
+							siteMap[trigSiteID].longitude * degree2radians,
+							siteMap[trigSiteID].altitude / 1000.0));
+						oneTriggerAtStation.stationID = trigSiteID;
+						oneTriggerAtStation.triggers.push_back(oneTrig);
+						oneTriggerAtStation.triggers.back().trigIdx = j;
+						triggerPool[trigSiteID] = oneTriggerAtStation;
+					}
+					else
+					{
+						triggerPool[trigSiteID].triggers.push_back(oneTrig);
+					}
+				}
 			}
 
-			double MinSq = FLOAT_MAX;
-			LocSta result;
-			__int64 finalCombIdx = 0;
+			if ((triggerPool.size()) >= 5)
+			{
+				vector<vector<TriggerInfo>> locCombinationPool = LigTools::getLocationPool_p(triggerPool, siteTimeMap);
 
-			double *sqList;
-			sqList = new double[locCombinationPool.size()];
-			LocSta *resultList = new LocSta[locCombinationPool.size()];
+				if (locCombinationPool.size() == 0)
+				{
+					allTriggers.erase(allTriggers.begin());
+					continue;
+				}
+
+				double MinSq = FLOAT_MAX;
+				LocSta result;
+				__int64 finalCombIdx = 0;
+
+				double* sqList;
+				sqList = new double[locCombinationPool.size()];
+				LocSta* resultList = new LocSta[locCombinationPool.size()];
 
 #pragma omp parallel for
-			for (int m = 0; m < locCombinationPool.size(); ++m)
-			{
-				vector<TriggerInfo> &oneComb = locCombinationPool[m];
-				vector<double> Loc_Time_One;
-				vector<LocSta> Stations_One;
-
-				for (int j = 0; j < oneComb.size(); ++j)
+				for (int m = 0; m < locCombinationPool.size(); ++m)
 				{
-					Loc_Time_One.push_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
-					Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
+					vector<TriggerInfo>& oneComb = locCombinationPool[m];
+					vector<double> Loc_Time_One;
+					vector<LocSta> Stations_One;
+
+					for (int j = 0; j < oneComb.size(); ++j)
+					{
+						Loc_Time_One.push_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
+						Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
+					}
+
+					// LocSta oneResult = GeoLocation_GPU(Stations_One, Loc_Time_One);
+					LocSta oneResult = GeoLocation_OP(Stations_One, Loc_Time_One);
+
+					sqList[m] = oneResult.sq;
+					resultList[m] = oneResult;
 				}
+				// 查找最小值
+				CountGeoLocationTimes += locCombinationPool.size();
+				MinSq = *min_element(sqList, sqList + locCombinationPool.size());
+				finalCombIdx = min_element(sqList, sqList + locCombinationPool.size()) - sqList;
+				result = resultList[finalCombIdx];
 
-				// LocSta oneResult = GeoLocation_GPU(Stations_One, Loc_Time_One);
-				LocSta oneResult = GeoLocation_OP(Stations_One, Loc_Time_One);
+				delete[] sqList;
+				delete[] resultList;
 
-				sqList[m] = oneResult.sq;
-				resultList[m] = oneResult;
+				if (MinSq < 30.0)
+				{
+					vector<TriggerInfo>& oneComb = locCombinationPool[finalCombIdx];
+
+					vector<double> Loc_Time_One;
+					vector<LocSta> Stations_One;
+
+					for (int j = 0; j < oneComb.size(); ++j)
+					{
+						Loc_Time_One.push_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
+						Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
+					}
+
+					LocSta oneResult = result;
+					// oneResult = FinalGeoLocation_GPU(Stations_One, Loc_Time_One, result);
+					// oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, result);
+
+					CountLocationPoints++;
+					LocSta oneResult_rad = oneResult;
+					oneResult_rad.Lat = oneResult.Lat * degree2radians;
+					oneResult_rad.Lon = oneResult.Lon * degree2radians;
+					if (LigTools::check_location_structure(Stations_One, oneResult_rad, config["checkTheta"].as<double>()))
+					{
+						cout << "CountGeoLocationTimes " << CountGeoLocationTimes << endl;
+						cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
+						// 把cout的内容写入NewData.txt里，调试使用
+						// 改成覆盖写入模式
+						GPSTime lig_time = oneComb[0].time;
+						lig_time.set_second(oneResult.occur_t);
+						outfile_O << CGPSTimeAlgorithm::GetTimeStr(lig_time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
+						LigDataApi::PostLigResult(lig_time, oneResult, oneComb, siteMap);
+					}
+
+					// 需要删除的元素的索引
+					std::vector<int> indices;
+					for (int i = 0; i < oneComb.size(); ++i)
+					{
+						indices.push_back(oneComb[i].trigIdx);
+						cout << siteMap[oneComb[i].stationID].name << " " << oneComb[i].Value << " " << CGPSTimeAlgorithm::GetTimeStr(oneComb[i].time) << " " << Stadistance(siteMap[oneComb[i].stationID].latitude, siteMap[oneComb[i].stationID].longitude, oneResult.Lat, oneResult.Lon) << endl;
+					}
+					// 从后向前删除
+				    //shared_lock<shared_mutex> lock(rwMutex);
+					std::sort(indices.begin(), indices.end(), std::greater<int>());
+					for (auto i : indices)
+					{
+						allTriggers.erase(allTriggers.begin() + i);
+					}
+					continue;
+				}
 			}
-			// 查找最小值
-            CountGeoLocationTimes += locCombinationPool.size();
-			MinSq = *min_element(sqList, sqList + locCombinationPool.size());
-			finalCombIdx = min_element(sqList, sqList + locCombinationPool.size()) - sqList;
-			result = resultList[finalCombIdx];
 
-			delete[] sqList;
-			delete[] resultList;
+			// shared_lock<shared_mutex> lock(rwMutex);
+			// for (int i = recycleIdx.size() - 1; i >= 0; i--) {
+			//	allTriggers.erase(allTriggers.begin() + recycleIdx[i]);
+			// }
+			// lock.unlock();
+			//	allTriggers.front().releaseData();
+			allTriggers.erase(allTriggers.begin());
 
-			if (MinSq < 30.0)
-			{
-				vector<TriggerInfo> &oneComb = locCombinationPool[finalCombIdx];
-
-				vector<double> Loc_Time_One;
-				vector<LocSta> Stations_One;
-
-				for (int j = 0; j < oneComb.size(); ++j)
-				{
-					Loc_Time_One.push_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
-					Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
-				}
-
-				LocSta oneResult = result;
-				// oneResult = FinalGeoLocation_GPU(Stations_One, Loc_Time_One, result);
-				// oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, result);
-
-				CountLocationPoints++;
-				LocSta oneResult_rad = oneResult;
-                oneResult_rad.Lat = oneResult.Lat * degree2radians;
-                oneResult_rad.Lon = oneResult.Lon * degree2radians;
-				if (LigTools::check_location_structure(Stations_One, oneResult_rad, config["checkTheta"].as<double>()))
-				{
-					cout << "CountGeoLocationTimes " << CountGeoLocationTimes << endl;
-					cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
-					// 把cout的内容写入NewData.txt里，调试使用
-					// 改成覆盖写入模式
-					GPSTime lig_time = oneComb[0].time;
-					lig_time.set_second(oneResult.occur_t);
-					outfile_O << CGPSTimeAlgorithm::GetTimeStr(lig_time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
-					LigDataApi::PostLigResult(lig_time, oneResult, oneComb, siteMap);
-				}
-
-				// 需要删除的元素的索引
-				std::vector<int> indices;
-				for (int i = 0; i < oneComb.size(); ++i)
-				{
-					indices.push_back(oneComb[i].trigIdx);
-					cout << siteMap[oneComb[i].stationID].name << " " << oneComb[i].Value << " " << CGPSTimeAlgorithm::GetTimeStr(oneComb[i].time) << " " << Stadistance(siteMap[oneComb[i].stationID].latitude, siteMap[oneComb[i].stationID].longitude, oneResult.Lat, oneResult.Lon) << endl;
-				}
-				// 从后向前删除
-				shared_lock<shared_mutex> lock(rwMutex);
-				std::sort(indices.begin(), indices.end(), std::greater<int>());
-				for (auto i : indices)
-				{
-					allTriggers.erase(allTriggers.begin() + i);
-				}
-				lock.unlock();
-				continue;
-			}
+			// 输出经过的时间
 		}
-
-		// shared_lock<shared_mutex> lock(rwMutex);
-		// for (int i = recycleIdx.size() - 1; i >= 0; i--) {
-		//	allTriggers.erase(allTriggers.begin() + recycleIdx[i]);
-		// }
-		// lock.unlock();
-		//	allTriggers.front().releaseData();
-		allTriggers.erase(allTriggers.begin());
-
-		// 输出经过的时间
+		lock.unlock();
+		outfile_O.close();
+		// 获取当前时间点
+		auto end = std::chrono::high_resolution_clock::now();
+		// 计算经过的时间（以秒为单位）
+		double elapsed_seconds = std::chrono::duration<double>(end - start).count();
+		std::cout << "Elapsed time: " << elapsed_seconds << " seconds.\n";
+		current_size = allTriggers.size();
+		if (config["mode"].as<string>() == "reProcess")
+		{
+			break;
+		}
 	}
-	outfile_O.close();
-	// 获取当前时间点
-	auto end = std::chrono::high_resolution_clock::now();
-	// 计算经过的时间（以秒为单位）
-	double elapsed_seconds = std::chrono::duration<double>(end - start).count();
-	std::cout << "Elapsed time: " << elapsed_seconds << " seconds.\n";
 }

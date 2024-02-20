@@ -14,11 +14,14 @@ void threadLoadData(vector<TriggerInfo>& allTriggers, LigDataApi& LigDataApi, sh
 			sort(allTriggers.begin(), allTriggers.end()); // 按照时间排序
 			allTriggers.erase(unique(allTriggers.begin(), allTriggers.end()), allTriggers.end()); // 去重
 
-			for (int i = 1; i != allTriggers.size(); ++i) {
-				if (allTriggers[i].time == allTriggers[i - 1].time) {
-					cout << "Debug: " << allTriggers[i - 1].stationID << " " << allTriggers[i].stationID << endl;
-					cout << CGPSTimeAlgorithm::GetTimeStr(allTriggers[i - 1].time) << endl;
-					cout << CGPSTimeAlgorithm::GetTimeStr(allTriggers[i].time) << endl;
+			if (allTriggers.size())
+			{
+				for (int i = 1; i != allTriggers.size(); ++i) {
+					if (allTriggers[i].time == allTriggers[i - 1].time) {
+						cout << "Debug: " << allTriggers[i - 1].stationID << " " << allTriggers[i].stationID << endl;
+						cout << CGPSTimeAlgorithm::GetTimeStr(allTriggers[i - 1].time) << endl;
+						cout << CGPSTimeAlgorithm::GetTimeStr(allTriggers[i].time) << endl;
+					}
 				}
 			}
 

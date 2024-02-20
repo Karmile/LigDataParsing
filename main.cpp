@@ -65,26 +65,6 @@ int main()
 					  { threadLoadData(allTriggers, LigDataApi, rwMutex); });
 	}
 
-	////test
-	// while (1)
-	//{
-	//     if (allTriggers.size())
-	//     {
-	//         shared_lock<shared_mutex> lock(rwMutex);
-	//         for (auto &trigger : allTriggers)
-	//         {
-	//             //cout << trigger.stationID << endl;
-	//             trigger.stationID = 111;
-	//         }
-	//         cout << allTriggers.size() << endl;
-	//     }
-	// }
-
-	// while(1){
-	//     int nCount = allTriggers.size();
-	//     cout << "allTriggers have " << nCount << " points." <<endl;
-	//     std::this_thread::sleep_for(std::chrono::seconds(10));
-	// }
 
 	std::this_thread::sleep_for(std::chrono::seconds(3));
 

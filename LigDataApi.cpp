@@ -117,9 +117,9 @@ vector<TriggerInfo> LigDataApi::GetTriggersData() {
             parse_result(res,allTriggers_);
         }
     }
-    else if (mode == "realtime")
+    else if (mode == "realTime")
     {
-        auto res = client.Get(config_["trigger"]["api"].as<string>());
+        auto res = client.Get(config_["trigger"]["api_rt"].as<string>());
         parse_result(res, allTriggers_);
     }
     return allTriggers_;
