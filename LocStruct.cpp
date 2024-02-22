@@ -60,7 +60,7 @@ LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time)
 	locPara.boundS = boundaryS * PI / 180;
 	locPara.boundW = boundaryW * PI / 180;
 	locPara.boundN = boundaryN * PI / 180;
-	locPara.Lat = 0.04 * PI / 180;
+	locPara.Lat = 0.08 * PI / 180;
 	locPara.boundht = 20;
 	locPara.boundhb = 0;
 	locPara.dh = 4;
@@ -86,7 +86,7 @@ LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time)
 
 	result = loccuda.Location3D_GPU(pDiffBe2s, NumOfSta);
 
-	if (result.sq < 30)
+	if (result.sq < 0)
 	{
 		LocPara locPara_S;
 
@@ -188,7 +188,8 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 
 	options.linear_solver_type = ceres::DENSE_QR;
 	options.minimizer_progress_to_stdout = false;
-	
+	options.num_threads = omp_get_max_threads();
+
 	// ���
 	ceres::Solver::Summary summary;
 	ceres::Solve(options, &problem, &summary);

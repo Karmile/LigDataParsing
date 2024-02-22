@@ -127,15 +127,61 @@ void LigTools::permuteVector(vector<vector<TriggerInfo>> triggers, vector<Trigge
 	}
 }
 
-vector<vector<TriggerInfo>> LigTools::getLocationPool_p(map<int, triggerAtStation> &triggerPool, map<int, map<int, double>> &siteTimeMap)
-{
+// vector<vector<TriggerInfo>> LigTools::getLocationPool_p(map<int, triggerAtStation> &triggerPool, map<int, map<int, double>> &siteTimeMap)
+// {
+// 	vector<vector<TriggerInfo>> locCombinationPool;
+// 	vector<vector<TriggerInfo>> triggers;
+// 	vector<TriggerInfo> current;
+// 	for (auto &iter : triggerPool)
+// 	{
+// 		triggers.push_back(iter.second.triggers);
+// 	}
+// 	permuteVector(triggers, current, 0, locCombinationPool, siteTimeMap);
+// 	return locCombinationPool;
+// }
+
+void generateCombinations(vector<int>& nums, int k, int start, vector<int>& current, vector<vector<int>>& combinations) {
+	if (current.size() == k) {
+		combinations.push_back(current);
+		return;
+	}
+
+	for (int i = start; i < nums.size(); i++) {
+		current.push_back(nums[i]);
+		generateCombinations(nums, k, i + 1, current, combinations);
+		current.pop_back();
+	}
+}
+
+vector<vector<int>> getCombinations(vector<int> nums, int k) {
+	vector<vector<int>> combinations;
+	vector<int> current;
+	generateCombinations(nums, k, 0, current, combinations);
+	return combinations;
+}
+
+vector<vector<TriggerInfo>> LigTools::getLocationPool_p(map<int, triggerAtStation>& triggerPool, map<int, map<int, double>>& siteTimeMap, int nCombStas) {
 	vector<vector<TriggerInfo>> locCombinationPool;
 	vector<vector<TriggerInfo>> triggers;
 	vector<TriggerInfo> current;
-	for (auto &iter : triggerPool)
-	{
+	for (auto& iter : triggerPool) {
 		triggers.push_back(iter.second.triggers);
 	}
-	permuteVector(triggers, current, 0, locCombinationPool, siteTimeMap);
+
+	// 获取n个站点中选取任意5个站点的组合
+	vector<int> stationIndices;
+	for (int i = 0; i < triggers.size(); i++) {
+		stationIndices.push_back(i);
+	}
+	vector<vector<int>> combinations = getCombinations(stationIndices, nCombStas);
+
+	for (const auto& combination : combinations) {
+		vector<vector<TriggerInfo>> selectedTriggers;
+		for (int i : combination) {
+			selectedTriggers.push_back(triggers[i]);
+		}
+		permuteVector(selectedTriggers, current, 0, locCombinationPool, siteTimeMap);
+	}
+
 	return locCombinationPool;
 }

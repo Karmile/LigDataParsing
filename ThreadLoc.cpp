@@ -67,7 +67,21 @@ void ThreadLoc(vector<TriggerInfo>& allTriggers, map<int, StationInfo>& siteMap,
 
 			if ((triggerPool.size()) >= 5)
 			{
-				vector<vector<TriggerInfo>> locCombinationPool = LigTools::getLocationPool_p(triggerPool, siteTimeMap);
+				vector<vector<TriggerInfo>> locCombinationPool = LigTools::getLocationPool_p(triggerPool, siteTimeMap, triggerPool.size());
+
+				if (triggerPool.size() > 6) {
+					for (int i = 1; i <= 2; ++i) {
+						vector<vector<TriggerInfo>> locCombinationPool_n = LigTools::getLocationPool_p(triggerPool, siteTimeMap, triggerPool.size() - i);
+						locCombinationPool_n.erase(std::remove_if(locCombinationPool_n.begin(), locCombinationPool_n.end(), [&](const auto& combination) {
+							return std::none_of(combination.begin(), combination.end(), [&](const auto& trigger) {
+								return trigger.stationID == baseTrig.stationID;
+							});
+						}), locCombinationPool_n.end());
+						locCombinationPool.insert(locCombinationPool.end(), locCombinationPool_n.begin(), locCombinationPool_n.end());
+						
+						if(triggerPool.size() ==7) break;
+					}
+				}
 
 				if (locCombinationPool.size() == 0)
 				{
@@ -87,6 +101,14 @@ void ThreadLoc(vector<TriggerInfo>& allTriggers, map<int, StationInfo>& siteMap,
 				for (int m = 0; m < locCombinationPool.size(); ++m)
 				{
 					vector<TriggerInfo>& oneComb = locCombinationPool[m];
+		/*			if (oneComb[0].stationID != baseTrig.stationID) {
+						sqList[m] = FLOAT_MAX;
+						continue;
+					}*/
+					if(oneComb.size() < 5){
+						sqList[m] = FLOAT_MAX;
+						continue;
+					}
 					vector<double> Loc_Time_One;
 					vector<LocSta> Stations_One;
 
