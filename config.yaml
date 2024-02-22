@@ -17,5 +17,7 @@ mode: reProcess   # realTime realTime
 reProcess:
   startTime: 20230807T080000
   endTime: 20230807T082000
+  #startTime: 20230701T000000
+  #endTime: 20230701T002000
 checkTheta: 45
 expTag: 021905

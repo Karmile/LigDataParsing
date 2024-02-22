@@ -125,7 +125,7 @@ vector<TriggerInfo> LigDataApi::GetTriggersData() {
     return allTriggers_;
 }
 
-void LigDataApi::PostLigResult(const GPSTime& lig_time, const LocSta& res, const std::vector<TriggerInfo>& oneComb, std::map<int, StationInfo>& siteMap) {
+void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res, const std::vector<TriggerInfo> oneComb, std::map<int, StationInfo>& siteMap) {
     httplib::Client client(config_["ligresult"]["url"].as<string>());
     string total_names;
     string total_IDs;
@@ -176,10 +176,14 @@ void LigDataApi::PostLigResult(const GPSTime& lig_time, const LocSta& res, const
 
     std::string json_data = Json::writeString(builder, data);
     // 发送 POST 请求，并设置请求头和 JSON 数据
+    auto start = std::chrono::high_resolution_clock::now();
     auto result = client.Post(config_["ligresult"]["api"].as<string>() + "/1", json_data, "application/json");
+    auto end = std::chrono::high_resolution_clock::now();
+    // 计算经过的时间（以秒为单位）
+    double elapsed_seconds = std::chrono::duration<double>(end - start).count();
 
     if (result && result->status == 200) {
-        std::cout << "Request succeeded. Response: " << result->body << std::endl;
+        std::cout << "Request succeeded. Response: " << result->body;
     }
 }
 

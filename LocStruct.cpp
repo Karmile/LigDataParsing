@@ -63,7 +63,7 @@ LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time)
 	locPara.Lat = 0.04 * PI / 180;
 	locPara.boundht = 20;
 	locPara.boundhb = 0;
-	locPara.dh = 1;
+	locPara.dh = 4;
 
 	int NumOfSta = Stations.size();
 	LocSta *pLocSta = new LocSta[NumOfSta];
@@ -160,7 +160,7 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 	ceres::Problem problem;
 
 	// ���Ӳ���
-	double params[4] = { 0.5, 2.0, 1.0, Loc_Time.back() }; // ��ʼ����
+	double params[4] = { 30*degree2radians, 115*degree2radians, 1.0, Loc_Time.back()}; // ��ʼ����
 	//判断result输入是否存在
 	if (initResult.Lat != 0 && initResult.Lon != 0 && initResult.h != 0)
 	{
@@ -176,7 +176,7 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 			new CostFunctor(Loc_Time, Stations),Stations.size());
 	problem.AddResidualBlock(cost_function, nullptr, params);
 	// �������ѡ��
-	Bounds para = Bounds(0, 140, 0, 40, 0, 20);
+	Bounds para = Bounds(90, 140, 0, 60, 0, 20);
 	problem.SetParameterLowerBound(params, 0, para.boundS);
 	problem.SetParameterUpperBound(params, 0, para.boundN);
 	problem.SetParameterLowerBound(params, 1, para.boundW);

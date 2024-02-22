@@ -50,7 +50,6 @@ int main()
 		}
 	}
 
-
 	thread loader;
 	// allTriggers 要求每30s刷新，
 	vector<TriggerInfo> allTriggers;
@@ -83,6 +82,6 @@ int main()
 					 { ThreadLoc(allTriggers, siteMap, siteTimeMap, rwMutex, config); });
 
 	locThread.join();
-	loader.join();
+	if (config["mode"].as<string>() == "realTime") loader.join();
 	return 0;
 }

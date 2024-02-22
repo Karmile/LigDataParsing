@@ -1,8 +1,11 @@
 #include "WorkThreads.h"
+#include <future>
 
 void ThreadLoc(vector<TriggerInfo>& allTriggers, map<int, StationInfo>& siteMap, map<int, map<int, double>>& siteTimeMap, shared_mutex& rwMutex, YAML::Node config)
 {
 	static int current_size{ 1 };
+	ThreadPool postThreadPool{ 100 };
+	// 用于测试
 	while (1) {
 		if (current_size == allTriggers.size())
 		{
@@ -38,7 +41,8 @@ void ThreadLoc(vector<TriggerInfo>& allTriggers, map<int, StationInfo>& siteMap,
 
 				// std::cout << diffTime << endl;
 
-				if ((fabs(diffTime) < siteTimeMap[baseTrig.stationID][oneTrig.stationID]) || (baseTrig.stationID == oneTrig.stationID))
+				// 这里第一个基站只放入一个数据，因为筛选标准是以第一个基站定标的，所以第一个基站只放入一个数据
+				if ((fabs(diffTime) <= siteTimeMap[baseTrig.stationID][oneTrig.stationID])) // || (baseTrig.stationID == oneTrig.stationID))
 				{
 					recycleIdx.push_back(j);
 
@@ -92,8 +96,8 @@ void ThreadLoc(vector<TriggerInfo>& allTriggers, map<int, StationInfo>& siteMap,
 						Stations_One.push_back(triggerPool[oneComb[j].stationID].staLocation);
 					}
 
-					// LocSta oneResult = GeoLocation_GPU(Stations_One, Loc_Time_One);
-					LocSta oneResult = GeoLocation_OP(Stations_One, Loc_Time_One);
+					LocSta oneResult = GeoLocation_GPU(Stations_One, Loc_Time_One);
+					//LocSta oneResult = GeoLocation_OP(Stations_One, Loc_Time_One);
 
 					sqList[m] = oneResult.sq;
 					resultList[m] = oneResult;
@@ -122,7 +126,7 @@ void ThreadLoc(vector<TriggerInfo>& allTriggers, map<int, StationInfo>& siteMap,
 
 					LocSta oneResult = result;
 					// oneResult = FinalGeoLocation_GPU(Stations_One, Loc_Time_One, result);
-					// oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, result);
+					oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, result);
 
 					CountLocationPoints++;
 					LocSta oneResult_rad = oneResult;
@@ -137,15 +141,16 @@ void ThreadLoc(vector<TriggerInfo>& allTriggers, map<int, StationInfo>& siteMap,
 						GPSTime lig_time = oneComb[0].time;
 						lig_time.set_second(oneResult.occur_t);
 						outfile_O << CGPSTimeAlgorithm::GetTimeStr(lig_time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
-						LigDataApi::PostLigResult(lig_time, oneResult, oneComb, siteMap);
+						//LigDataApi::PostLigResult(lig_time, oneResult, oneComb, siteMap);
+						postThreadPool.enqueue(LigDataApi::PostLigResult, lig_time, oneResult, oneComb, siteMap);
 					}
-
+					// cout << "Test2" << endl;
 					// 需要删除的元素的索引
 					std::vector<int> indices;
 					for (int i = 0; i < oneComb.size(); ++i)
 					{
 						indices.push_back(oneComb[i].trigIdx);
-						cout << siteMap[oneComb[i].stationID].name << " " << oneComb[i].Value << " " << CGPSTimeAlgorithm::GetTimeStr(oneComb[i].time) << " " << Stadistance(siteMap[oneComb[i].stationID].latitude, siteMap[oneComb[i].stationID].longitude, oneResult.Lat, oneResult.Lon) << endl;
+						//cout << siteMap[oneComb[i].stationID].name << " " << oneComb[i].Value << " " << CGPSTimeAlgorithm::GetTimeStr(oneComb[i].time) << " " << Stadistance(siteMap[oneComb[i].stationID].latitude, siteMap[oneComb[i].stationID].longitude, oneResult.Lat, oneResult.Lon) << endl;
 					}
 					// 从后向前删除
 				    //shared_lock<shared_mutex> lock(rwMutex);
