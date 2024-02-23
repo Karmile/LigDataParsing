@@ -102,6 +102,21 @@ public:
 	}
 	*/
 
+	static time_t ConvertGPSTimeToUnixTime(GPSTime OneTime)
+	{
+		struct tm tm;
+		memset(&tm, 0, sizeof(tm));
+		tm.tm_year = OneTime.m_Year + 2000 - 1900;
+		tm.tm_mon = OneTime.m_Month - 1;
+		tm.tm_mday = OneTime.m_Day;
+		tm.tm_hour = OneTime.m_Hour;
+		tm.tm_min = OneTime.m_Min;
+		tm.tm_sec = OneTime.m_Sec;
+		time_t ft = mktime(&tm);
+		return ft;
+	}
+
+
 	static void GetTimeStr(GPSTime Time, char *str, int strLength)
 	{
 		sprintf(str, "%02d%02d%02d%02d%02d%02d.%08d",

@@ -6,7 +6,7 @@
 #define PI 3.1415926535897931
 #define degree2radians 0.017453292519943
 #define radians2degree 57.32484076433121
-#define cVeo 299792.458*0.998
+#define cVeo 299792.458*0.999
 #define R  6371.004;
 #define R_OK 4 /* Test for read permission.  */
 #define W_OK 2 /* Test for write permission.  */
@@ -28,9 +28,7 @@ using namespace std;
 //static unsigned long long CountValidLocations = 0;
 
 //static string curOutPutFileName;
-static GPSTime currentFileT;
 static int cachePoolLimitEachStation = 3;
-static double sqLevel = 0.3;
 static GPSTime pastFileTime;
 static unsigned long long CountGeoLocationTimes = 0;
 static unsigned long long CountLocationPoints = 0;

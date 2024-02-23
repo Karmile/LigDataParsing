@@ -8,7 +8,15 @@
 
 std::string configFile = (".\\config.yaml");
 YAML::Node config = YAML::LoadFile(configFile);
-
+LocPara locPara = LocPara{
+	0.08 * PI / 180,
+	boundaryW * PI / 180,
+	boundaryE * PI / 180,
+	boundaryS * PI / 180,
+	boundaryN * PI / 180,
+	0,
+	20,
+	5};
 
 LocSta FinalGeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time, LocSta result)
 {
@@ -46,7 +54,7 @@ LocSta FinalGeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time, Lo
 	locPara_S.dh = 0.05;
 	LocCuda New_loccuda_Final;
 	New_loccuda_Final.GetLocPara(locPara_S, pLocSta, NumOfSta);
-	resultFinal = New_loccuda_Final.Location3D_GPU(pDiffBe2s, NumOfSta);
+	//resultFinal = New_loccuda_Final.Location3D_GPU(pDiffBe2s, NumOfSta);
 
 	delete[] pDiffBe2s;
 	delete[] pLocSta;
@@ -55,16 +63,6 @@ LocSta FinalGeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time, Lo
 
 LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time)
 {
-	LocPara locPara;
-	locPara.boundE = boundaryE * PI / 180;
-	locPara.boundS = boundaryS * PI / 180;
-	locPara.boundW = boundaryW * PI / 180;
-	locPara.boundN = boundaryN * PI / 180;
-	locPara.Lat = 0.08 * PI / 180;
-	locPara.boundht = 20;
-	locPara.boundhb = 0;
-	locPara.dh = 4;
-
 	int NumOfSta = Stations.size();
 	LocSta *pLocSta = new LocSta[NumOfSta];
 	memcpy(pLocSta, &Stations[0], sizeof(LocSta) * NumOfSta);
@@ -186,9 +184,9 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 	ceres::Solver::Options options;
 	// 设置使用LM算法求解
 
-	options.linear_solver_type = ceres::DENSE_QR;
+	options.linear_solver_type = ceres::DENSE_SCHUR;
 	options.minimizer_progress_to_stdout = false;
-	options.num_threads = omp_get_max_threads();
+	options.num_threads = 4;
 
 	// ���
 	ceres::Solver::Summary summary;

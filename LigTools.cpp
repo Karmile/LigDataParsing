@@ -43,7 +43,7 @@ bool LigTools::check_location_structure(const vector<LocSta> &Stations, LocSta &
 	return valid;
 }
 
-vector<vector<TriggerInfo>> LigTools::getLocationPool(map<int, triggerAtStation> &triggerPool)
+vector<vector<TriggerInfo>> LigTools::getLocationPool(unordered_map<int, triggerAtStation> &triggerPool)
 {
 
 	vector<vector<TriggerInfo>> locCombinationPool;
@@ -91,12 +91,12 @@ vector<vector<TriggerInfo>> LigTools::getLocationPool(map<int, triggerAtStation>
 	return locCombinationPool;
 }
 
-void LigTools::permuteVector(vector<vector<TriggerInfo>> triggers, vector<TriggerInfo> &current, int index, vector<vector<TriggerInfo>> &CombinationPool, map<int, map<int, double>> &siteTimeMap)
+void LigTools::permuteVector(vector<vector<TriggerInfo>> triggers, vector<TriggerInfo> &current, int index, vector<vector<TriggerInfo>> &CombinationPool, unordered_map<int, unordered_map<int, double>> &siteTimeMap)
 {
 	if (index == triggers.size())
 	{
 		// 已经枚举到了最后一个数组，将其添加到最终结果，当前排列完成
-		CombinationPool.push_back(current);
+		CombinationPool.emplace_back(current);
 		return;
 	}
 
@@ -119,7 +119,7 @@ void LigTools::permuteVector(vector<vector<TriggerInfo>> triggers, vector<Trigge
 		}
 		if (valid)
 		{
-			current.push_back(tri);
+			current.emplace_back(tri);
 			permuteVector(triggers, current, index + 1, CombinationPool, siteTimeMap);
 			// 执行到这里，说明已经成功返回了一组组合，所以pop_back(）一个元素以便进行新的排列
 			current.pop_back();
@@ -142,7 +142,7 @@ void LigTools::permuteVector(vector<vector<TriggerInfo>> triggers, vector<Trigge
 
 void generateCombinations(vector<int>& nums, int k, int start, vector<int>& current, vector<vector<int>>& combinations) {
 	if (current.size() == k) {
-		combinations.push_back(current);
+		combinations.emplace_back(current);
 		return;
 	}
 
@@ -160,25 +160,25 @@ vector<vector<int>> getCombinations(vector<int> nums, int k) {
 	return combinations;
 }
 
-vector<vector<TriggerInfo>> LigTools::getLocationPool_p(map<int, triggerAtStation>& triggerPool, map<int, map<int, double>>& siteTimeMap, int nCombStas) {
+vector<vector<TriggerInfo>> LigTools::getLocationPool_p(unordered_map<int, triggerAtStation>& triggerPool, unordered_map<int, unordered_map<int, double>>& siteTimeMap, int nCombStas) {
 	vector<vector<TriggerInfo>> locCombinationPool;
 	vector<vector<TriggerInfo>> triggers;
 	vector<TriggerInfo> current;
 	for (auto& iter : triggerPool) {
-		triggers.push_back(iter.second.triggers);
+		triggers.emplace_back(iter.second.triggers);
 	}
 
 	// 获取n个站点中选取任意5个站点的组合
 	vector<int> stationIndices;
 	for (int i = 0; i < triggers.size(); i++) {
-		stationIndices.push_back(i);
+		stationIndices.emplace_back(i);
 	}
 	vector<vector<int>> combinations = getCombinations(stationIndices, nCombStas);
 
 	for (const auto& combination : combinations) {
 		vector<vector<TriggerInfo>> selectedTriggers;
 		for (int i : combination) {
-			selectedTriggers.push_back(triggers[i]);
+			selectedTriggers.emplace_back(triggers[i]);
 		}
 		permuteVector(selectedTriggers, current, 0, locCombinationPool, siteTimeMap);
 	}

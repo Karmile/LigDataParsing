@@ -47,7 +47,7 @@ vector<StationInfo> LigDataApi::GetStationData(){
 					site.gpsTime = item["GPSTime"].asString();
 					//site.id = item["id"].asInt();
 					site.GPSIsValid = item["GPSIsValid"].asBool();
-					sites_.push_back(site);
+					sites_.emplace_back(site);
                 }
                 // 打印获取的站点信息
                 for (const auto& site : sites_) {
@@ -87,7 +87,7 @@ void LigDataApi::parse_result(const httplib::Result &res, vector<TriggerInfo>&al
                     trigger.Value = (stof(item[9].asString()) - stof(item[8].asString())) * 1.0 / 2048 * 5.0;
                     trigger.time = GPSTime(stoi(item[0].asString()), stoi(item[1].asString()), stoi(item[2].asString()),
                         stoi(item[3].asString()), stoi(item[4].asString()), stoi(item[5].asString()), stof(item[6].asString()) / 1.0e9);
-                    alltriggers.push_back(trigger);
+                    alltriggers.emplace_back(trigger);
                 }
                 cout << "Trigger info obtained from api: " << alltriggers.size() << endl << endl;
             }
@@ -104,6 +104,7 @@ void LigDataApi::parse_result(const httplib::Result &res, vector<TriggerInfo>&al
 }
 vector<TriggerInfo> LigDataApi::GetTriggersData() {
     vector<TriggerInfo> allTriggers_;
+    allTriggers_.reserve(1000000);
     httplib::Client client(config_["trigger"]["url"].as<string>());
     auto mode = config_["mode"].as<string>();
     if (mode == "reProcess")
@@ -122,10 +123,13 @@ vector<TriggerInfo> LigDataApi::GetTriggersData() {
         auto res = client.Get(config_["trigger"]["api_rt"].as<string>());
         parse_result(res, allTriggers_);
     }
+
+    sort(allTriggers_.begin(), allTriggers_.end()); // 按照时间排序
+    allTriggers_.erase(unique(allTriggers_.begin(), allTriggers_.end()), allTriggers_.end()); // 去重
     return allTriggers_;
 }
 
-void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res, const std::vector<TriggerInfo> oneComb, std::map<int, StationInfo>& siteMap) {
+void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res, const std::vector<TriggerInfo> oneComb, std::unordered_map<int, StationInfo>& siteMap) {
     httplib::Client client(config_["ligresult"]["url"].as<string>());
     string total_names;
     string total_IDs;
@@ -182,8 +186,8 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res, const s
     // 计算经过的时间（以秒为单位）
     double elapsed_seconds = std::chrono::duration<double>(end - start).count();
 
-    if (result && result->status == 200) {
-        std::cout << "Request succeeded. Response: " << result->body;
+    if (result && result->status != 200) {
+        std::cout << "Request failed. Response: " << result->body;
     }
 }
 

@@ -6,6 +6,7 @@
 #include <shared_mutex>
 #include <chrono>
 #include "WorkThreads.h"
+#include <unordered_map>
 
 using namespace std;
 shared_mutex rwMutex;
@@ -33,13 +34,13 @@ int main()
 	// sites 不用重复获取，一段时间内获取一次即可
 	vector<StationInfo> sites = LigDataApi.GetStationData();
 
-	map<int, StationInfo> siteMap;
+	unordered_map<int, StationInfo> siteMap;
 	for (auto &site : sites)
 	{
 		siteMap[site.stationID] = site;
 	}
 	
-	map<int, map<int, double>> siteDistMap, siteTimeMap;
+	unordered_map<int, unordered_map<int, double>> siteDistMap, siteTimeMap;
 
 	for (auto &site1 : sites)
 	{
@@ -52,34 +53,36 @@ int main()
 
 	thread loader;
 	// allTriggers 要求每30s刷新，
-	vector<TriggerInfo> allTriggers;
+	deque<TriggerInfo> allTriggers;
+	deque<TriggerInfo> transTriggers;
+
 	if (config["mode"].as<string>() == "reProcess")
 	{
-		threadLoadData(allTriggers, LigDataApi, rwMutex, true);
+		threadLoadData(transTriggers, LigDataApi, rwMutex, true);
 	}
 	else if (config["mode"].as<string>() == "realTime")
 	{
 		// 新线程，实时获取数据
 		loader=thread([&]()
-					  { threadLoadData(allTriggers, LigDataApi, rwMutex); });
+					  { threadLoadData(transTriggers, LigDataApi, rwMutex); });
 	}
 
 
 	std::this_thread::sleep_for(std::chrono::seconds(3));
 
 	// GPSTime endTime = allTriggers.back().time;
-	int idx = 0;
-	for (const auto &x : allTriggers)
-	{
-		cout << CGPSTimeAlgorithm::GetTimeStr(x.time) << " " << x.stationID << endl;
-		idx++;
-		if (idx == 300)
-			break;
-	}
+	//int idx = 0;
+	//for (const auto &x : transTriggers)
+	//{
+	//	cout << CGPSTimeAlgorithm::GetTimeStr(x.time) << " " << x.stationID << endl;
+	//	idx++;
+	//	if (idx == 300)
+	//		break;
+	//}
 
 	// 开始定位
 	thread locThread([&]()
-					 { ThreadLoc(allTriggers, siteMap, siteTimeMap, rwMutex, config); });
+					 { ThreadLoc(allTriggers, transTriggers, siteMap, siteTimeMap, rwMutex, config); });
 
 	locThread.join();
 	if (config["mode"].as<string>() == "realTime") loader.join();
