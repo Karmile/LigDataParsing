@@ -53,6 +53,8 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 	double LocThresholdInitial = config["LocThresholdInitial"].as<double>();
 	double checkTheta = config["checkTheta"].as<double>();
 	double waitTime = config["waitTime"].as<double>();
+	double LocThresholdFinal  = config["LocThresholdFinal"].as<double>();
+
 	// 用于测试
 	while (1)
 	{
@@ -198,7 +200,7 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 					LocSta oneResult_rad = oneResult;
 					oneResult_rad.Lat = oneResult.Lat * degree2radians;
 					oneResult_rad.Lon = oneResult.Lon * degree2radians;
-					if (LigTools::check_location_structure(Stations_One, oneResult_rad, checkTheta))
+					if (LigTools::check_location_structure(Stations_One, oneResult_rad, checkTheta) && MinSq< LocThresholdFinal)
 					{
 						cout << "CountGeoLocationTimes " << CountGeoLocationTimes << endl;
 						cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;

@@ -37,8 +37,8 @@ lat = data(:,2);
 lon = data(:,3);
 sq = data(:, 5); 
 
-lat = lat(sq<7);
-lon = lon(sq<7);
+lat = lat(sq<5);
+lon = lon(sq<5);
 
 % plotm(coastlat, coastlon, 'k')
 
