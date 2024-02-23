@@ -13,12 +13,12 @@ ligresult:
   api: "/writeLigResult"
 scale: 20
 waitTime: 180
-mode: reProcess   # realTime realTime
+mode: realTime   # realTime realTime
 reProcess:
-  #startTime: 20230807T080000
-  #endTime: 20230807T082000
-  startTime: 20230701T000000
-  endTime: 20230701T002000
+  startTime: 20230807T080300
+  endTime: 20230807T080500
+  #startTime: 20230701T000000
+  #endTime: 20230701T002000
 checkTheta: 45
 expTag: 021905
 maxBaseLineAsTOA: 0.005 # 1500 km

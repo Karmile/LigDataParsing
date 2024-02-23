@@ -32,6 +32,15 @@ public:
 			return ActTime;
 	}
 
+	static GPSTime AddActPointSec(GPSTime ActTime, double AddActPointSec)
+	{
+		ActTime.m_ActPointSec += AddActPointSec;
+		if ((ActTime.m_ActPointSec >= 1) || (ActTime.m_ActPointSec < 0))
+			return GPSTimeCarrtOneSecond(ActTime);
+		else
+			return ActTime;
+	}
+
 	/*
 	static GPSTime GPSTimeCarrtOneSecond(GPSTime OneTime) //If the Point data of GPS >1, the time should be carried;
 	{

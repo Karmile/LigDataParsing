@@ -47,23 +47,18 @@ void ProcessCombinationPool(vector<vector<TriggerInfo>> &locCombinationPool, uno
 
 void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTriggers, unordered_map<int, StationInfo> &siteMap, unordered_map<int, unordered_map<int, double>> &siteTimeMap, shared_mutex &rwMutex, YAML::Node config)
 {
-	static int current_size{1};
 	ThreadPool postThreadPool{100};
 	double maxBaseLineAsTOA = (config["maxBaseLineAsTOA"].as<double>());
 	double LocThresholdInitial = config["LocThresholdInitial"].as<double>();
 	double checkTheta = config["checkTheta"].as<double>();
 	double waitTime = config["waitTime"].as<double>();
 	double LocThresholdFinal  = config["LocThresholdFinal"].as<double>();
+	GPSTime CurrentProcessingTime = GPSTime();
 
 	// 用于测试
 	while (1)
 	{
-		if (current_size == allTriggers.size())
-		{
-			std::this_thread::sleep_for(std::chrono::seconds(1));
-			continue;
-		}
-
+		std::this_thread::sleep_for(std::chrono::seconds(10));
 		//合并数据
 		unique_lock<shared_mutex> lock(rwMutex);
 		if (transTriggers.size())
@@ -75,7 +70,7 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 			else 
 			{
 				for(const auto &trigger: transTriggers){
-					if(trigger.time > allTriggers.begin()->time)
+					if(trigger.time > CurrentProcessingTime)
 						allTriggers.push_back(trigger);
 				}
 				sort(allTriggers.begin(), allTriggers.end()); // 按照时间排序
@@ -108,7 +103,11 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 			//vector<int> recycleIdx;
 			
 			// 预留网络等待的时间，如果不满足则直接返回
+			CurrentProcessingTime = CGPSTimeAlgorithm::AddActPointSec(baseTrig.time, maxBaseLineAsTOA);
 			if ((CGPSTimeAlgorithm::ConvertGPSTimeToUnixTime(baseTrig.time) + 8 * 3600) > (time(nullptr) - waitTime)) break;
+
+			//cout << "Time: " << (CGPSTimeAlgorithm::ConvertGPSTimeToUnixTime(baseTrig.time) + 8 * 3600) << " " << (time(nullptr) - waitTime) << endl;
+			// CurrentProcessingTime = allTriggers[0].time;
 
 			for (int j = 0; j < allTriggers.size(); ++j)
 			{
@@ -237,7 +236,7 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 		outfile_O.close();
 		// 计算经过的时间（以秒为单位）
 		std::cout << "Elapsed time: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() << " seconds.\n";
-		current_size = allTriggers.size();
+
 		if (config["mode"].as<string>() == "reProcess")
 		{
 			break;

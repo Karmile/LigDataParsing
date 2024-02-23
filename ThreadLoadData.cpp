@@ -33,10 +33,10 @@ void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi, s
 			cout << "current transTriggers size: " << transTriggers.size() << endl;
 
 			if (isReProcess) break;
+			std::this_thread::sleep_for(std::chrono::seconds(60));
 		}
 
 		//break;
 		// ÐÝÃß30s
-		std::this_thread::sleep_for(std::chrono::seconds(5));
 	}
 }

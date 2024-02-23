@@ -85,7 +85,7 @@ void LigDataApi::parse_result(const httplib::Result &res, vector<TriggerInfo>&al
                     trigger.stationID = stoi(item[7].asString());
                     //trigger.Mean = stoi(item[8].asString());
                     trigger.Value = (stof(item[9].asString()) - stof(item[8].asString())) * 1.0 / 2048 * 5.0;
-                    trigger.time = GPSTime(stoi(item[0].asString()), stoi(item[1].asString()), stoi(item[2].asString()),
+                    trigger.time = GPSTime(stoi(item[0].asString())-2000, stoi(item[1].asString()), stoi(item[2].asString()),
                         stoi(item[3].asString()), stoi(item[4].asString()), stoi(item[5].asString()), stof(item[6].asString()) / 1.0e9);
                     alltriggers.emplace_back(trigger);
                 }
