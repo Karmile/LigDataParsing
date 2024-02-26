@@ -22,7 +22,7 @@ inline double Stadistance(double LatA, double LonA, double LatB, double LonB)
 	return  (2.0f * asin(fmin(1.0f, sqrtf(sin((LatB - LatA) / 2) * sin((LatB - LatA) / 2) + sin((LonB - LonA) / 2) * sin((LonB - LonA) / 2) * cos(LatA) * cos(LatB)))))*R;
 }
 
- inline double Stadistance_3D(double LatA, double LonA, double AltA, double LatB, double LonB,double AltB) {
+inline double Stadistance_3D(double LatA, double LonA, double AltA, double LatB, double LonB,double AltB) {
 	LatA = rads(LatA);
 	LatB = rads(LatB);
 	LonA = rads(LonA);
