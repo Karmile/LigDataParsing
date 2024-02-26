@@ -149,9 +149,31 @@ struct GPSTime
 			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour == s2.m_Hour) && (s1.m_Min == s2.m_Min) && (s1.m_Sec < s2.m_Sec))
 			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour == s2.m_Hour) && (s1.m_Min == s2.m_Min) && (s1.m_Sec == s2.m_Sec) && (s1.m_ActPointSec < s2.m_ActPointSec));
 	}
+	friend bool operator<= (const GPSTime& s1, const GPSTime& s2)
+	{
+		return(s1 == s2)
+			||((s1.m_Year < s2.m_Year))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month < s2.m_Month))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day < s2.m_Day))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour < s2.m_Hour))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour == s2.m_Hour) && (s1.m_Min < s2.m_Min))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour == s2.m_Hour) && (s1.m_Min == s2.m_Min) && (s1.m_Sec < s2.m_Sec))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour == s2.m_Hour) && (s1.m_Min == s2.m_Min) && (s1.m_Sec == s2.m_Sec) && (s1.m_ActPointSec < s2.m_ActPointSec));
+	}
 	friend bool operator> (const GPSTime& s1, const GPSTime& s2)
 	{
 		return((s1.m_Year > s2.m_Year))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month > s2.m_Month))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day > s2.m_Day))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour > s2.m_Hour))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour == s2.m_Hour) && (s1.m_Min > s2.m_Min))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour == s2.m_Hour) && (s1.m_Min == s2.m_Min) && (s1.m_Sec > s2.m_Sec))
+			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour == s2.m_Hour) && (s1.m_Min == s2.m_Min) && (s1.m_Sec == s2.m_Sec) && (s1.m_ActPointSec > s2.m_ActPointSec));
+	}
+	friend bool operator>= (const GPSTime& s1, const GPSTime& s2)
+	{
+		return(s1 == s2)
+			||((s1.m_Year > s2.m_Year))
 			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month > s2.m_Month))
 			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day > s2.m_Day))
 			|| ((s1.m_Year == s2.m_Year) && (s1.m_Month == s2.m_Month) && (s1.m_Day == s2.m_Day) && (s1.m_Hour > s2.m_Hour))

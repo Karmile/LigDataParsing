@@ -136,8 +136,13 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res, const s
     string total_IDs;
     string total_infos;
     std::stringstream ss;
-    for (const auto& iter : oneComb)
+    GPSTime min_t{ oneComb[0].time };
+    min_t += Duration("00000000T000100");
+    int min_idx{ 0 };
+    double F{ 0.0 };
+    for (size_t i = 0; i < oneComb.size(); ++i)
     {
+        const auto& iter = oneComb[i];
         total_IDs += std::to_string(iter.stationID) + "+";
         total_names += siteMap[iter.stationID].name + "+";
         ss << "{"
@@ -146,7 +151,15 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res, const s
             << "\"value\":" << iter.Value << ","
             << "\"peakCurrent\":" << "  "
             << "},";
+        if (iter.time < min_t && config_["gainCoefficient"][oneComb[i].stationID])
+        {
+            min_t = iter.time;
+            min_idx = i;
+            F = config_["gainCoefficient"][oneComb[min_idx].stationID].as<double>();
+        }
     }
+    const auto& min_sta = siteMap[oneComb[min_idx].stationID];
+    double d{ Stadistance_3D(res.Lat,res.Lon,res.h,min_sta.latitude,min_sta.longitude,min_sta.altitude) };
     total_infos = ss.str();
     // 去掉最后一个 "+" 和 ","字符串
     if (!oneComb.empty()) {
@@ -165,7 +178,7 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res, const s
     data["altitude"] = res.h;
     data["residual"] = res.sq;
     data["numOfSta"] = oneComb.size();
-    data["peakCurrent"] = " ";
+    data["peakCurrent"] = oneComb[min_idx].Value * d * F;
     data["type"] = (res.h < 2.0) ? "RS" : "IC";
     data["datetime"] = lig_time.str();
     data["nameOfSta"] = total_names;
