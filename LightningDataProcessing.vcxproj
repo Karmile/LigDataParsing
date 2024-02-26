@@ -144,7 +144,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GeoTools.h" />
-    <ClInclude Include="GPSTimeAlgorithm.h" />
     <ClInclude Include="include\DataStruct.h" />
     <ClInclude Include="include\Params.h" />
     <ClInclude Include="LigTools.h" />

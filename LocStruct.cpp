@@ -84,7 +84,7 @@ LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time)
 
 	result = loccuda.Location3D_GPU(pDiffBe2s, NumOfSta);
 
-	if (result.sq < 0)
+	if (result.sq < 30)
 	{
 		LocPara locPara_S;
 
@@ -101,13 +101,13 @@ LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time)
 		//New_loccuda.GetLocPara(locPara_S, pLocSta, NumOfSta);
 		//result = New_loccuda.Location3D_GPU(pDiffBe2s, NumOfSta);
 
-		locPara_S.Lat = 0.002 * PI / 180;
-		locPara_S.boundW = (result.Lon - 0.064) * PI / 180;
-		locPara_S.boundS = (result.Lat - 0.064) * PI / 180;
-		locPara_S.boundE = (result.Lon + 0.064001) * PI / 180;
-		locPara_S.boundN = (result.Lat + 0.064001) * PI / 180;
-		locPara_S.boundht = result.h + 3.2;
-		locPara_S.boundhb = result.h - 3.2;
+		locPara_S.Lat = 0.005 * PI / 180;
+		locPara_S.boundW = (result.Lon - 0.320) * PI / 180;
+		locPara_S.boundS = (result.Lat - 0.320) * PI / 180;
+		locPara_S.boundE = (result.Lon + 0.320001) * PI / 180;
+		locPara_S.boundN = (result.Lat + 0.320001) * PI / 180;
+		locPara_S.boundht = result.h + 6;
+		locPara_S.boundhb = result.h - 6;
 		if (locPara_S.boundhb < 0)
 			locPara_S.boundhb = 0;
 		if (locPara_S.boundht > 20)
@@ -152,7 +152,7 @@ struct CostFunctor {
 	}
 };
 
-LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta initResult) {
+LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta initResult, int num_threads) {
 
 	// ���� Ceres ����
 	ceres::Problem problem;
@@ -184,9 +184,11 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 	ceres::Solver::Options options;
 	// 设置使用LM算法求解
 
-	options.linear_solver_type = ceres::DENSE_SCHUR;
+	//options.num_threads = omp_get_max_threads();
+
+	options.linear_solver_type = ceres::DENSE_QR;
 	options.minimizer_progress_to_stdout = false;
-	options.num_threads = 4;
+	options.num_threads = num_threads; //omp_get_max_threads();
 
 	// ���
 	ceres::Solver::Summary summary;

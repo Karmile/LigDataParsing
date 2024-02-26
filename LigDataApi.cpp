@@ -4,6 +4,7 @@
 #include "LigDataApi.h"
 #include "chrono"
 #include "GPSTimeAlgorithm.h"
+#include "LigTools.h"
 
 YAML::Node LigDataApi::config_ = YAML::LoadFile(".\\config.yaml");
 LigDataApi::LigDataApi(const std::string str) {
@@ -178,6 +179,29 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res, const s
     builder["commentStyle"] = "None";
     builder["indentation"] = "   ";  // 设置缩进
 
+    // Write to .loc file
+    FILE* fp = fopen(LigTools::GetLocFileName(config_["OutputFilePath"].as<string>(), lig_time).c_str(), "ab");
+    if (fp)
+    {
+        std::string str = CGPSTimeAlgorithm::GetTimeString(lig_time) + " " +
+                          std::to_string(res.Lat) + " " +
+                          std::to_string(res.Lon) + " " +
+                          std::to_string(res.h) + " " +
+                          std::to_string(res.sq) + " " +
+                          std::to_string(oneComb.size()) + " " +
+                            data["peakCurrent"].asString();
+
+        str += " " + data["type"].asString() + " " +
+               data["locationMethod"].asString() + " " +
+               total_names + " " +
+               total_IDs;
+
+        str += "\r\n";
+        fwrite(str.c_str(), 1, str.length(), fp);
+        fclose(fp);
+    }
+
+
     std::string json_data = Json::writeString(builder, data);
     // 发送 POST 请求，并设置请求头和 JSON 数据
     auto start = std::chrono::high_resolution_clock::now();
@@ -185,6 +209,9 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res, const s
     auto end = std::chrono::high_resolution_clock::now();
     // 计算经过的时间（以秒为单位）
     double elapsed_seconds = std::chrono::duration<double>(end - start).count();
+
+
+
 
     if (result && result->status != 200) {
         std::cout << "Request failed. Response: " << result->body;

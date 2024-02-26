@@ -6,6 +6,7 @@ void ProcessCombinationPool(vector<vector<TriggerInfo>> &locCombinationPool, uno
 	double *sqList = new double[locCombinationPool.size()];
 	LocSta *resultList = new LocSta[locCombinationPool.size()];
 
+	int num_threads = locCombinationPool.size();
 #pragma omp parallel for num_threads(locCombinationPool.size())
 	for (int m = 0; m < locCombinationPool.size(); ++m)
 	{
@@ -30,6 +31,7 @@ void ProcessCombinationPool(vector<vector<TriggerInfo>> &locCombinationPool, uno
 
 		LocSta oneResult = GeoLocation_GPU(Stations_One, Loc_Time_One);
 		// LocSta oneResult = GeoLocation_OP(Stations_One, Loc_Time_One);
+		//oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, oneResult, num_threads);
 
 		sqList[m] = oneResult.sq;
 		resultList[m] = oneResult;
@@ -58,11 +60,10 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 	// 用于测试
 	while (1)
 	{
-		std::this_thread::sleep_for(std::chrono::seconds(10));
 		//合并数据
-		unique_lock<shared_mutex> lock(rwMutex);
 		if (transTriggers.size())
 		{
+			unique_lock<shared_mutex> lock(rwMutex);
 			if (allTriggers.size() == 0)
 			{
 				allTriggers = transTriggers;
@@ -77,9 +78,15 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 				allTriggers.erase(unique(allTriggers.begin(), allTriggers.end()), allTriggers.end()); // 去重
 			}
 			transTriggers.clear();
+			lock.unlock();
+			cout << "New data merge and begin processing: "<< CGPSTimeAlgorithm::GetTimeString(CurrentProcessingTime) << endl;
 		}
-
-		lock.unlock();
+		else
+		{
+			cout << "Wait for new trigger data... 10s" << endl;
+			std::this_thread::sleep_for(std::chrono::seconds(10));
+			continue;
+		}
 
 		auto start = std::chrono::high_resolution_clock::now();
 
@@ -152,6 +159,7 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 			{
 				double MinSq = FLOAT_MAX;
 				double ThresSqInitial = LocThresholdInitial;
+				double ThresSqFinal = LocThresholdFinal;
 				LocSta result;
 				__int64 finalCombIdx;
 				vector<vector<TriggerInfo>> locCombinationPool;
@@ -195,11 +203,13 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 					// oneResult = FinalGeoLocation_GPU(Stations_One, Loc_Time_One, result);
 					oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, result);
 
-					CountLocationPoints++;
 					LocSta oneResult_rad = oneResult;
 					oneResult_rad.Lat = oneResult.Lat * degree2radians;
 					oneResult_rad.Lon = oneResult.Lon * degree2radians;
-					if (LigTools::check_location_structure(Stations_One, oneResult_rad, checkTheta) && MinSq< LocThresholdFinal)
+
+					if (oneComb.size() > 6) ThresSqFinal = ThresSqFinal * 1.5;
+
+					if (LigTools::check_location_structure(Stations_One, oneResult_rad, checkTheta) && oneResult.sq< ThresSqFinal)
 					{
 						cout << "CountGeoLocationTimes " << CountGeoLocationTimes << endl;
 						cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
@@ -209,6 +219,7 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 						lig_time.set_second(oneResult.occur_t);
 						outfile_O << CGPSTimeAlgorithm::GetTimeStr(lig_time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
 						postThreadPool.enqueue(LigDataApi::PostLigResult, lig_time, oneResult, oneComb, siteMap);
+						CountLocationPoints++;
 					}
 					// cout << "Test2" << endl;
 					// 需要删除的元素的索引
@@ -235,7 +246,7 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 
 		outfile_O.close();
 		// 计算经过的时间（以秒为单位）
-		std::cout << "Elapsed time: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() << " seconds.\n";
+		std::cout <<"CountLocationPoints: "<< CountLocationPoints << " Elapsed time: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() << " seconds.\n";
 
 		if (config["mode"].as<string>() == "reProcess")
 		{

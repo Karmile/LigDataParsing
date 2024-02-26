@@ -1,4 +1,5 @@
 #include "LigTools.h"
+#include <filesystem>
 
 LigTools::LigTools()
 {
@@ -6,6 +7,31 @@ LigTools::LigTools()
 
 LigTools::~LigTools()
 {
+}
+
+string LigTools::GetLocFileName(string filePath, const GPSTime Time)
+{
+	string FileName = filePath;
+	if (!filesystem::exists(FileName))
+	{
+		filesystem::create_directory(FileName);
+	}
+	FileName += "/";
+	FileName += CGPSTimeAlgorithm::GetTimeString(Time).substr(0, 6);
+	if (!filesystem::exists(FileName))
+	{
+		filesystem::create_directory(FileName);
+	}
+	FileName += "/";
+	FileName += CGPSTimeAlgorithm::GetTimeString(Time).substr(0, 8);
+	if (!filesystem::exists(FileName))
+	{
+		filesystem::create_directory(FileName);
+	}
+	FileName += "/";
+	FileName += CGPSTimeAlgorithm::GetTimeString(Time).substr(0, 10);
+	FileName += ".loc";
+	return FileName;
 }
 
 bool LigTools::check_location_structure(const vector<LocSta> &Stations, LocSta &result, double checkTheta)

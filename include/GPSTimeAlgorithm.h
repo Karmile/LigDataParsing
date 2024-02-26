@@ -101,7 +101,7 @@ public:
 					}
 				}
 			}
-	
+
 			return OneTime;
 		}
 		else
@@ -124,7 +124,6 @@ public:
 		time_t ft = mktime(&tm);
 		return ft;
 	}
-
 
 	static void GetTimeStr(GPSTime Time, char *str, int strLength)
 	{
@@ -217,7 +216,7 @@ public:
 	// 	return PosixTime;
 	// }
 
-	static GPSTime GetCurrentSystemTime() //If the Point data of GPS >1, the time should be carried;
+	static GPSTime GetCurrentSystemTime() // If the Point data of GPS >1, the time should be carried;
 	{
 		time_t seconds = time(NULL);
 		struct tm *p = localtime(&seconds);
@@ -231,7 +230,7 @@ public:
 		return OneTime;
 	}
 
-	static GPSTime GPSTimeCarrtOneSecond(GPSTime OneTime) //If the Point data of GPS >1, the time should be carried;
+	static GPSTime GPSTimeCarrtOneSecond(GPSTime OneTime) // If the Point data of GPS >1, the time should be carried;
 	{
 		struct tm tm;
 		memset(&tm, 0, sizeof(tm));
@@ -257,9 +256,9 @@ public:
 			OneTime.m_Hour = p->tm_hour;
 			OneTime.m_Min = p->tm_min;
 			OneTime.m_Sec = p->tm_sec;
-		// printf("acc is %f/n", OneTime.m_ActPointSec);
+			// printf("acc is %f/n", OneTime.m_ActPointSec);
 
-		return OneTime;
+			return OneTime;
 		}
 		else if (OneTime.m_ActPointSec < 0)
 		{
@@ -280,7 +279,7 @@ public:
 			OneTime.m_Hour = p->tm_hour;
 			OneTime.m_Min = p->tm_min;
 			OneTime.m_Sec = p->tm_sec;
-		// printf("acc is %f/n", OneTime.m_ActPointSec);
+			// printf("acc is %f/n", OneTime.m_ActPointSec);
 
 			return OneTime;
 		}
@@ -297,6 +296,13 @@ public:
 		std::string s(&time[6], &time[20]);
 		delete[] time;
 		//_CrtDumpMemoryLeaks();
-		return atof(s.c_str()); //日以后转换为double类型的时间
+		return atof(s.c_str()); // 锟斤拷锟皆猴拷转锟斤拷为double锟斤拷锟酵碉拷时锟斤拷
+	}
+
+	static string GetTimeString(GPSTime Time)
+	{
+		char str[256];
+		GetTimeStr(Time, str, 256);
+		return string(str);
 	}
 };

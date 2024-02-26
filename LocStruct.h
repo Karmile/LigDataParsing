@@ -71,8 +71,8 @@ struct locationInformation
 
 // Final location in CUDA Loc
 LocSta FinalGeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time, LocSta result);
-
+	
 // Initial location in CUDA Loc
 LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time);
-LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta initResult = LocSta(0.0, 0.0, 0.0));
+LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta initResult = LocSta(0.0, 0.0, 0.0), int num_threads = 1);
 bool check_location_structure(const vector<LocSta>& Stations, LocSta& result);
