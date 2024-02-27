@@ -24,7 +24,7 @@ struct Duration
 	{
 		if (input_str.find("T") != 0 && input_str.length() == 15)
 		{
-			m_Year = stoi(input_str.substr(0, 4));
+			m_Year = stoi(input_str.substr(2, 2));
 			m_Month = stoi(input_str.substr(4, 2));
 			m_Day = stoi(input_str.substr(6, 2));
 			m_Hour = stoi(input_str.substr(9, 2));
@@ -33,7 +33,7 @@ struct Duration
 		}
 		else if (input_str.length() == 14)
 		{
-			m_Year = stoi(input_str.substr(0, 4));
+			m_Year = stoi(input_str.substr(2, 2));
 			m_Month = stoi(input_str.substr(4, 2));
 			m_Day = stoi(input_str.substr(6, 2));
 			m_Hour = stoi(input_str.substr(8, 2));
@@ -95,7 +95,7 @@ struct GPSTime
 		{
 			m_isTimeVaild = true;
 			m_isTimeConfirm = true;
-			m_Year  = stoi(input_str.substr(0, 4));
+			m_Year  = stoi(input_str.substr(2, 2));
 			m_Month = stoi(input_str.substr(4, 2));
 			m_Day = stoi(input_str.substr(6, 2));
 			m_Hour = stoi(input_str.substr(9, 2));
@@ -107,7 +107,7 @@ struct GPSTime
 		{
 			m_isTimeVaild = true;
 			m_isTimeConfirm = true;
-			m_Year = stoi(input_str.substr(0, 4));
+			m_Year = stoi(input_str.substr(2, 2));
 			m_Month = stoi(input_str.substr(4, 2));
 			m_Day = stoi(input_str.substr(6, 2));
 			m_Hour = stoi(input_str.substr(8, 2));
@@ -207,11 +207,11 @@ struct GPSTime
 
 	GPSTime operator+= (const Duration& s2)
 	{
-		tm tm_{ m_Sec, m_Min, m_Hour, m_Day, m_Month - 1,m_Year - 1900 }; // 2022-01-01 12:00:00
+		tm tm_{ m_Sec, m_Min, m_Hour, m_Day, m_Month - 1,m_Year + 100 }; // 2022-01-01 12:00:00
 		time_t time = std::mktime(&tm_);
 		time += s2.second();
 		tm_ = *std::localtime(&time);
-		*this = GPSTime(tm_.tm_year + 1900,tm_.tm_mon + 1, tm_.tm_mday, tm_.tm_hour, tm_.tm_min, tm_.tm_sec);
+		*this = GPSTime(tm_.tm_year - 100,tm_.tm_mon + 1, tm_.tm_mday, tm_.tm_hour, tm_.tm_min, tm_.tm_sec,m_ActPointSec);
 		return *this;
 	}
 	string str() const {
