@@ -154,7 +154,7 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res, const s
             << "\"id\":" << iter.stationID << ","
             << "\"name\":\"" << site.name << "\","
             << "\"value\":" << iter.Value << ","
-            << "\"peakCurrent\":" << "  " << ","
+            << "\"peakCurrent\":" << "\" \"" << ","
             << "\"residual\":" << residual
             << "},";
         if (iter.time < min_t && config_["gainCoefficient"][oneComb[i].stationID])
