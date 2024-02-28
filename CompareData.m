@@ -11,13 +11,13 @@ clear all
 % lon = [2.07061672,2.01754308,1.88706219]*57.3248;
 %     scatterm(lat, lon, 3, 'filled','r');
 %% NEwData
-data = load("lig_txt/NewData3.txt");
+data = load("lig_txt/NewData.txt");
 
 lat = data(:,2);
 lon = data(:,3);
 sq = data(:, 5);
 
-lat = lat(sq<7);
+lat_g = lat(sq<7);
 lon = lon(sq<7);
 
 figure;
@@ -28,23 +28,23 @@ plotm(coastlat, coastlon, 'k')
 
 hold on;
 
-    scatterm(lat, lon, 3, 'filled','b');
+    scatterm(lat_g, lon, 3, 'filled','b');
   
     % legend('b','optimize');
 
 data = load("lig_txt/NewData2.txt");
-lat = data(:,2);
+lat_o = data(:,2);
 lon = data(:,3);
 sq = data(:, 5); 
 
-lat = lat(sq<5);
-lon = lon(sq<5);
+% lat = lat(sq<5);
+% lon = lon(sq<5);
 
 % plotm(coastlat, coastlon, 'k')
 
 hold on;
 
-    scatterm(lat, lon, 3, 'filled','r');
+    scatterm(lat_o, lon, 3, 'filled','r');
 
 
 
@@ -58,7 +58,8 @@ data = jsondecode(str);
 
 lat = [];
 lon = [];
-for i = 1:size(data)
+u_size = size(data);
+for i = 1:u_size
     lat = [lat,str2double(data{i}{2})];
     lon = [lon,str2double(data{i}{3})];
 end
@@ -71,7 +72,7 @@ end
 hold on;
 
 scatterm(lat, lon, 3, 'filled', 'g')
-title('添加优化边界限制')
+title('定位结果对比')
 
 
 

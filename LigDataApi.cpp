@@ -115,7 +115,7 @@ vector<TriggerInfo> LigDataApi::GetTriggersData() {
         while (st_time < end_time)
         {
             st_time += Duration("00000000T000700");
-            auto res = client.Get(config_["trigger"]["api_nt"].as<string>() + st_time.str() + "/10");
+            auto res = client.Get(config_["trigger"]["api_nt"].as<string>() + st_time.str().replace(0, 2, "20") + "/10");
             parse_result(res,allTriggers_);
         }
     }
