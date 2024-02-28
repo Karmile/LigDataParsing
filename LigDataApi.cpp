@@ -103,21 +103,23 @@ void LigDataApi::parse_result(const httplib::Result &res, vector<TriggerInfo>&al
 
     }
 }
-vector<TriggerInfo> LigDataApi::GetTriggersData() {
+vector<TriggerInfo> LigDataApi::GetTriggersData(bool &keep_loading) {
     vector<TriggerInfo> allTriggers_;
     allTriggers_.reserve(1000000);
     httplib::Client client(config_["trigger"]["url"].as<string>());
     auto mode = config_["mode"].as<string>();
     if (mode == "reProcess")
     {        
-        GPSTime st_time(config_["reProcess"]["startTime"].as<string>());
-        GPSTime end_time(config_["reProcess"]["endTime"].as<string>());
+        static GPSTime st_time(config_["reProcess"]["startTime"].as<string>());
+        static GPSTime end_time(config_["reProcess"]["endTime"].as<string>());
         while (st_time < end_time)
         {
             st_time += Duration("00000000T000700");
             auto res = client.Get(config_["trigger"]["api_nt"].as<string>() + st_time.str().replace(0, 2, "20") + "/10");
             parse_result(res,allTriggers_);
+            if (allTriggers_.size() > 200000) break;
         }
+        keep_loading = (st_time < end_time);
     }
     else if (mode == "realTime")
     {

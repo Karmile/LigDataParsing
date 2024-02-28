@@ -211,7 +211,7 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 
 					if (LigTools::check_location_structure(Stations_One, oneResult_rad, checkTheta) && oneResult.sq< ThresSqFinal)
 					{
-						cout << "CountGeoLocationTimes " << CountGeoLocationTimes << endl;
+						cout << "CountGeoLocationTimes " << CountGeoLocationTimes << "  Number of sites: " << Stations_One.size() << endl;
 						cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
 						// 把cout的内容写入NewData.txt里，调试使用
 						// 改成覆盖写入模式
@@ -248,9 +248,9 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 		// 计算经过的时间（以秒为单位）
 		std::cout <<"CountLocationPoints: "<< CountLocationPoints << " Elapsed time: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() << " seconds.\n";
 
-		if (config["mode"].as<string>() == "reProcess")
-		{
-			break;
-		}
+		//if (config["mode"].as<string>() == "reProcess")
+		//{
+		//	break;
+		//}
 	}
 }

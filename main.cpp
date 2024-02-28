@@ -51,11 +51,14 @@ int main()
 		}
 	}
 
-	thread loader;
+	thread loader, locThread;
 	// allTriggers 要求每30s刷新，
 	deque<TriggerInfo> allTriggers;
 	deque<TriggerInfo> transTriggers;
 
+	// 开始定位
+	locThread = thread([&]()
+					 { ThreadLoc(allTriggers, transTriggers, siteMap, siteTimeMap, rwMutex, config); });
 	if (config["mode"].as<string>() == "reProcess")
 	{
 		threadLoadData(transTriggers, LigDataApi, rwMutex, true);
@@ -63,26 +66,10 @@ int main()
 	else if (config["mode"].as<string>() == "realTime")
 	{
 		// 新线程，实时获取数据
-		loader=thread([&]()
+		loader = thread([&]()
 					  { threadLoadData(transTriggers, LigDataApi, rwMutex); });
 	}
 
-
-	std::this_thread::sleep_for(std::chrono::seconds(3));
-
-	// GPSTime endTime = allTriggers.back().time;
-	//int idx = 0;
-	//for (const auto &x : transTriggers)
-	//{
-	//	cout << CGPSTimeAlgorithm::GetTimeStr(x.time) << " " << x.stationID << endl;
-	//	idx++;
-	//	if (idx == 300)
-	//		break;
-	//}
-
-	// 开始定位
-	thread locThread([&]()
-					 { ThreadLoc(allTriggers, transTriggers, siteMap, siteTimeMap, rwMutex, config); });
 
 	locThread.join();
 	if (config["mode"].as<string>() == "realTime") loader.join();
