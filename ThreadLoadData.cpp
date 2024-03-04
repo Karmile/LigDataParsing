@@ -1,7 +1,6 @@
 #include "WorkThreads.h"
 
-void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi, shared_mutex& rwMutex, bool isReProcess) {
-	bool keep_loading{ true };
+void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi, shared_mutex& rwMutex,bool &keep_loading, bool isReProcess ) {
 	while (keep_loading) {
 		// 获取最新的数据
 		vector<TriggerInfo> cache = LigDataApi.GetTriggersData(keep_loading);

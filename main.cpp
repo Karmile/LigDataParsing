@@ -55,23 +55,25 @@ int main()
 	// allTriggers 要求每30s刷新，
 	deque<TriggerInfo> allTriggers;
 	deque<TriggerInfo> transTriggers;
+	bool keep_loading{ true };
 
 	// 开始定位
 	locThread = thread([&]()
-					 { ThreadLoc(allTriggers, transTriggers, siteMap, siteTimeMap, rwMutex, config); });
+		{ ThreadLoc(allTriggers, transTriggers, siteMap, siteTimeMap, rwMutex, config, keep_loading); });
 	if (config["mode"].as<string>() == "reProcess")
 	{
-		threadLoadData(transTriggers, LigDataApi, rwMutex, true);
+		loader = thread([&]()
+			{ threadLoadData(transTriggers, LigDataApi, rwMutex, keep_loading, true); });
 	}
 	else if (config["mode"].as<string>() == "realTime")
 	{
 		// 新线程，实时获取数据
 		loader = thread([&]()
-					  { threadLoadData(transTriggers, LigDataApi, rwMutex); });
+			{ threadLoadData(transTriggers, LigDataApi, rwMutex, keep_loading, false); });
 	}
 
 
 	locThread.join();
-	if (config["mode"].as<string>() == "realTime") loader.join();
+	loader.join();
 	return 0;
 }
