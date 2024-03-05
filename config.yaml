@@ -13,28 +13,39 @@ ligresult:
   api: "/writeLigResult"
 scale: 20
 waitTime: 180
-mode: reProcess #realTime   #  realTime
+mode: realTime   #reProcess #  realTime
 reProcess:
   # startTime: 20230807T080300
   # endTime: 20230807T080500
   startTime: 20230701T001500
   endTime: 20230701T002000
 checkTheta: 45
-expTag: 021908
+expTag: 230305_RT
 maxBaseLineAsTOA: 0.005 # 1500 km
 LocThresholdInitial: 15.0 # sq par station
 LocThresholdFinal: 7.0 #sq par station
 OutputFilePath: ".\\lig_txt\\"
 gainCoefficient:
- 1: -0.410
- 2: -0.2409
- 3: -0.6706
- 5: -0.3111
- 7: -0.1625
- 8: -0.2583
- 10: -0.2531
- 11: 0.0496
- 53: -0.5204
- 104: -0.6028
- 105: 0.312
- 201: -0.201
+ 1 : -0.41  
+ 2 : -0.524 
+ 3 : -0.8545
+ 8 : -0.7082
+ 11: -0.9527
+ #20: -3.0902
+ 51: -0.7641
+ #52: -1.2908
+ 53: -0.3247
+ #56: -1.2192
+ 57: -0.5738
+ #61: -1.2851
+ #62: -3.559 
+ #63: -1.8967
+ 64: -0.8493
+ #65: -7.6043
+ 71: -0.3174
+ 81: -0.7331
+ 82: -1.7061
+ 83: -0.3957
+ 84: -1.6444
+ #85: -1.4435
+ #86: -11.836
