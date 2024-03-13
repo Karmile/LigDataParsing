@@ -59,21 +59,22 @@ int main()
 
 	// 开始定位
 	locThread = thread([&]()
-		{ ThreadLoc(allTriggers, transTriggers, siteMap, siteTimeMap, rwMutex, config, keep_loading); });
+		{ ThreadLoc(allTriggers, transTriggers, siteMap, siteTimeMap, rwMutex, config); });
 	if (config["mode"].as<string>() == "reProcess")
 	{
-		loader = thread([&]()
-			{ threadLoadData(transTriggers, LigDataApi, rwMutex, keep_loading, true); });
+		//loader = thread([&]()
+		//	{ threadLoadData(transTriggers, LigDataApi, rwMutex, keep_loading, true); });
+		threadLoadData(transTriggers, LigDataApi, rwMutex, true);
 	}
 	else if (config["mode"].as<string>() == "realTime")
 	{
 		// 新线程，实时获取数据
 		loader = thread([&]()
-			{ threadLoadData(transTriggers, LigDataApi, rwMutex, keep_loading, false); });
+			{ threadLoadData(transTriggers, LigDataApi, rwMutex, false); });
 	}
 
 
 	locThread.join();
-	loader.join();
+	//loader.join();
 	return 0;
 }

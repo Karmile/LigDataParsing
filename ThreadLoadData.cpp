@@ -1,9 +1,9 @@
 #include "WorkThreads.h"
 
-void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi, shared_mutex& rwMutex,bool &keep_loading, bool isReProcess ) {
-	while (keep_loading) {
+void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi, shared_mutex& rwMutex, bool isReProcess ) {
+	while (1) {
 		// 获取最新的数据
-		vector<TriggerInfo> cache = LigDataApi.GetTriggersData(keep_loading);
+		vector<TriggerInfo> cache = LigDataApi.GetTriggersData();
 		// 合并数据
 		int init_size = transTriggers.size();
 
@@ -31,8 +31,10 @@ void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi, s
 
 		if (!isReProcess)
 			std::this_thread::sleep_for(std::chrono::seconds(60));
-		if (transTriggers.size() > 300000)
-			std::this_thread::sleep_for(std::chrono::seconds(60));
+		else
+			break;
+		//if (transTriggers.size() > 300000)
+		//	std::this_thread::sleep_for(std::chrono::seconds(60));
 
 	}
 }

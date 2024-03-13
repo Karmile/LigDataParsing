@@ -8,15 +8,7 @@
 
 std::string configFile = (".\\config.yaml");
 YAML::Node config = YAML::LoadFile(configFile);
-LocPara locPara = LocPara{
-	0.08 * PI / 180,
-	boundaryW * PI / 180,
-	boundaryE * PI / 180,
-	boundaryS * PI / 180,
-	boundaryN * PI / 180,
-	0,
-	20,
-	5};
+
 
 LocSta FinalGeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time, LocSta result)
 {
@@ -55,20 +47,30 @@ LocSta FinalGeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time, Lo
 	LocCuda New_loccuda_Final;
 	New_loccuda_Final.GetLocPara(locPara_S, pLocSta, NumOfSta);
 	//resultFinal = New_loccuda_Final.Location3D_GPU(pDiffBe2s, NumOfSta);
+	resultFinal.occur_t = Loc_Time[0] - Stadistance(Stations[0].Lat * radians2degree, Stations[0].Lon * radians2degree, resultFinal.Lat, resultFinal.Lon) / cVeo;
 
 	delete[] pDiffBe2s;
 	delete[] pLocSta;
 	return resultFinal;
 }
 
-LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time)
+LocSta GeoLocation_GPU_Initial(vector<LocSta> Stations, vector<double> Loc_Time)
 {
+	LocPara locPara = LocPara{
+	0.04 * PI / 180,
+	boundaryW * PI / 180,
+	boundaryE * PI / 180,
+	boundaryS * PI / 180,
+	boundaryN * PI / 180,
+	0,
+	20,
+	5 };
 	int NumOfSta = Stations.size();
-	LocSta *pLocSta = new LocSta[NumOfSta];
+	LocSta* pLocSta = new LocSta[NumOfSta];
 	memcpy(pLocSta, &Stations[0], sizeof(LocSta) * NumOfSta);
 	LocCuda loccuda;
 	loccuda.GetLocPara(locPara, pLocSta, NumOfSta);
-	DATAPREC *pDiffBe2s = new DATAPREC[NumOfSta];
+	DATAPREC* pDiffBe2s = new DATAPREC[NumOfSta];
 	LocSta result;
 
 	for (int m = 1; m != Stations.size(); ++m)
@@ -102,10 +104,10 @@ LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time)
 		//result = New_loccuda.Location3D_GPU(pDiffBe2s, NumOfSta);
 
 		locPara_S.Lat = 0.005 * PI / 180;
-		locPara_S.boundW = (result.Lon - 0.320) * PI / 180;
-		locPara_S.boundS = (result.Lat - 0.320) * PI / 180;
-		locPara_S.boundE = (result.Lon + 0.320001) * PI / 180;
-		locPara_S.boundN = (result.Lat + 0.320001) * PI / 180;
+		locPara_S.boundW = (result.Lon - 0.640) * PI / 180;
+		locPara_S.boundS = (result.Lat - 0.640) * PI / 180;
+		locPara_S.boundE = (result.Lon + 0.640001) * PI / 180;
+		locPara_S.boundN = (result.Lat + 0.640001) * PI / 180;
 		locPara_S.boundht = result.h + 6;
 		locPara_S.boundhb = result.h - 6;
 		if (locPara_S.boundhb < 0)
@@ -118,6 +120,81 @@ LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time)
 		New_loccuda_Final.GetLocPara(locPara_S, pLocSta, NumOfSta);
 		result = New_loccuda_Final.Location3D_GPU(pDiffBe2s, NumOfSta);
 	}
+	result.occur_t = Loc_Time[0] - Stadistance(Stations[0].Lat * radians2degree, Stations[0].Lon * radians2degree, result.Lat, result.Lon) / cVeo;
+
+	//check_location_structure(Stations, result);
+	delete[] pDiffBe2s;
+	delete[] pLocSta;
+	return result;
+}
+
+LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time)
+{
+	LocPara locPara = LocPara{
+		0.02 * PI / 180,
+		boundaryW * PI / 180,
+		boundaryE * PI / 180,
+		boundaryS * PI / 180,
+		boundaryN * PI / 180,
+		0,
+		0.1,
+		0.1 };
+
+	int NumOfSta = Stations.size();
+	LocSta *pLocSta = new LocSta[NumOfSta];
+	memcpy(pLocSta, &Stations[0], sizeof(LocSta) * NumOfSta);
+	LocCuda loccuda;
+	loccuda.GetLocPara(locPara, pLocSta, NumOfSta);
+	DATAPREC *pDiffBe2s = new DATAPREC[NumOfSta];
+	LocSta result;
+
+	for (int m = 1; m != Stations.size(); ++m)
+	{
+		pDiffBe2s[m] = (Loc_Time[m] - Loc_Time[m - 1]) * cVeo;
+	}
+	pDiffBe2s[0] = (Loc_Time[0] - Loc_Time[Loc_Time.size() - 1]) * cVeo;
+
+	//for (int i = 0; i != Stations.size(); ++i)
+	//{
+	//	pDiffBe2s[i] = (Loc_Time[i] - Loc_Time[NumOfSta - 1]) * cVeo;
+	//}
+
+	result = loccuda.Location3D_GPU(pDiffBe2s, NumOfSta);
+
+	if (result.sq < 30)
+	{
+		LocPara locPara_S;
+
+		locPara_S.Lat = 0.01 * PI / 180;
+		locPara_S.boundW = (result.Lon - 0.64) * PI / 180;
+		locPara_S.boundS = (result.Lat - 0.64) * PI / 180;
+		locPara_S.boundE = (result.Lon + 0.64001) * PI / 180;
+		locPara_S.boundN = (result.Lat + 0.64001) * PI / 180;
+		locPara_S.boundht = 20;
+		locPara_S.boundhb = 0;
+		locPara_S.dh = 1;
+
+		LocCuda New_loccuda;
+		New_loccuda.GetLocPara(locPara_S, pLocSta, NumOfSta);
+		result = New_loccuda.Location3D_GPU(pDiffBe2s, NumOfSta);
+
+
+		locPara_S.Lat = 0.001 * PI / 180;
+		locPara_S.boundW = (result.Lon - 0.064) * PI / 180;
+		locPara_S.boundS = (result.Lat - 0.064) * PI / 180;
+		locPara_S.boundE = (result.Lon + 0.064001) * PI / 180;
+		locPara_S.boundN = (result.Lat + 0.064001) * PI / 180;
+		locPara_S.boundht = result.h + 3.2;
+		locPara_S.boundhb = result.h - 3.2;
+		if (locPara_S.boundhb < 0)
+			locPara_S.boundhb = 0;
+
+		locPara_S.dh = 0.1;
+		LocCuda New_loccuda_Final;
+		New_loccuda_Final.GetLocPara(locPara_S, pLocSta, NumOfSta);
+		result = New_loccuda_Final.Location3D_GPU(pDiffBe2s, NumOfSta);
+	}
+	result.occur_t = Loc_Time[0] - Stadistance(Stations[0].Lat * radians2degree, Stations[0].Lon * radians2degree, result.Lat, result.Lon) / cVeo;
 	//check_location_structure(Stations, result);
 	delete[] pDiffBe2s;
 	delete[] pLocSta;

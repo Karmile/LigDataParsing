@@ -6,7 +6,7 @@
 #define PI 3.1415926535897931
 #define degree2radians 0.017453292519943
 #define radians2degree 57.32484076433121
-#define cVeo 299792.458*0.999
+#define cVeo 299792.458
 #define R  6371.004;
 #define R_OK 4 /* Test for read permission.  */
 #define W_OK 2 /* Test for write permission.  */

@@ -11,7 +11,7 @@ class LigDataApi
 public:
 	LigDataApi(const std::string str );
 	vector<StationInfo> GetStationData();
-	vector<TriggerInfo> GetTriggersData(bool& keep_loading);
+	vector<TriggerInfo> GetTriggersData();
 	static void PostLigResult(const GPSTime lig_time, const LocSta res,const std::vector<TriggerInfo> oneComb,std::unordered_map<int, StationInfo>&siteMap);
 
 private:

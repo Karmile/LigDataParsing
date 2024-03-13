@@ -103,23 +103,28 @@ void LigDataApi::parse_result(const httplib::Result &res, vector<TriggerInfo>&al
 
     }
 }
-vector<TriggerInfo> LigDataApi::GetTriggersData(bool &keep_loading) {
+vector<TriggerInfo> LigDataApi::GetTriggersData() {
     vector<TriggerInfo> allTriggers_;
     allTriggers_.reserve(1000000);
     httplib::Client client(config_["trigger"]["url"].as<string>());
     auto mode = config_["mode"].as<string>();
     if (mode == "reProcess")
     {        
-        static GPSTime st_time(config_["reProcess"]["startTime"].as<string>());
+        static GPSTime cur_time(config_["reProcess"]["startTime"].as<string>());
+        static GPSTime start_time(config_["reProcess"]["startTime"].as<string>());
         static GPSTime end_time(config_["reProcess"]["endTime"].as<string>());
-        while (st_time < end_time)
+        while (cur_time < end_time)
         {
-            st_time += Duration("00000000T000700");
-            auto res = client.Get(config_["trigger"]["api_nt"].as<string>() + st_time.str().replace(0, 2, "20") + "/10");
+            cur_time += Duration("00000000T005700");
+            auto res = client.Get(config_["trigger"]["api_nt"].as<string>() + cur_time.str().replace(0, 2, "20") + "/60");
             parse_result(res,allTriggers_);
-            if (allTriggers_.size() > 200000) break;
+            //if (allTriggers_.size() > 200000) break;
         }
-        keep_loading = (st_time < end_time);
+
+        // 滤除allTriggers_中小于cur_time，或者大于end_time的数据
+        allTriggers_.erase(remove_if(allTriggers_.begin(), allTriggers_.end(), [&](const TriggerInfo& trigger) {
+			return trigger.time < start_time || trigger.time > end_time;
+			}), allTriggers_.end());
     }
     else if (mode == "realTime")
     {
