@@ -1,16 +1,16 @@
 #include "WorkThreads.h"
 #include <future>
 
-void ProcessCombinationPool(vector<vector<TriggerInfo>> &locCombinationPool, unordered_map<int, triggerAtStation> &triggerPool, double &MinSq, LocSta &result, __int64 &finalCombIdx, unsigned long long &CountGeoLocationTimes)
+void ProcessCombinationPool(vector<vector<TriggerInfo>>& locCombinationPool, unordered_map<int, triggerAtStation>& triggerPool, double& MinSq, LocSta& result, __int64& finalCombIdx, unsigned long long& CountGeoLocationTimes)
 {
-	double *sqList = new double[locCombinationPool.size()];
-	LocSta *resultList = new LocSta[locCombinationPool.size()];
+	double* sqList = new double[locCombinationPool.size()];
+	LocSta* resultList = new LocSta[locCombinationPool.size()];
 
 	int num_threads = locCombinationPool.size();
 #pragma omp parallel for num_threads(locCombinationPool.size())
 	for (int m = 0; m < locCombinationPool.size(); ++m)
 	{
-		vector<TriggerInfo> &oneComb = locCombinationPool[m];
+		vector<TriggerInfo>& oneComb = locCombinationPool[m];
 		/*			if (oneComb[0].stationID != baseTrig.stationID) {
 						sqList[m] = FLOAT_MAX;
 						continue;
@@ -53,14 +53,14 @@ void ProcessCombinationPool(vector<vector<TriggerInfo>> &locCombinationPool, uno
 	delete[] resultList;
 }
 
-void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTriggers, unordered_map<int, StationInfo> &siteMap, unordered_map<int, unordered_map<int, double>> &siteTimeMap, shared_mutex &rwMutex, YAML::Node config)
+void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTriggers, unordered_map<int, StationInfo>& siteMap, unordered_map<int, unordered_map<int, double>>& siteTimeMap, shared_mutex& rwMutex, YAML::Node config)
 {
-	ThreadPool postThreadPool{100};
+	ThreadPool postThreadPool{ 100 };
 	double maxBaseLineAsTOA = (config["maxBaseLineAsTOA"].as<double>());
 	double LocThresholdInitial = config["LocThresholdInitial"].as<double>();
 	double checkTheta = config["checkTheta"].as<double>();
 	double waitTime = config["waitTime"].as<double>();
-	double LocThresholdFinal  = config["LocThresholdFinal"].as<double>();
+	double LocThresholdFinal = config["LocThresholdFinal"].as<double>();
 	GPSTime CurrentProcessingTime = GPSTime();
 
 	// 用于测试
@@ -70,22 +70,16 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 		if (transTriggers.size())
 		{
 			unique_lock<shared_mutex> lock(rwMutex);
-			if (allTriggers.size() == 0)
-			{
-				allTriggers = transTriggers;
+
+			for (const auto& trigger : transTriggers) {
+				if (trigger.time > CurrentProcessingTime)
+					allTriggers.push_back(trigger);
 			}
-			else 
-			{
-				for(const auto &trigger: transTriggers){
-					if(trigger.time > CurrentProcessingTime)
-						allTriggers.push_back(trigger);
-				}
-				sort(allTriggers.begin(), allTriggers.end()); // 按照时间排序
-				allTriggers.erase(unique(allTriggers.begin(), allTriggers.end()), allTriggers.end()); // 去重
-			}
+			sort(allTriggers.begin(), allTriggers.end()); // 按照时间排序
+			allTriggers.erase(unique(allTriggers.begin(), allTriggers.end()), allTriggers.end()); // 去重
+
 			transTriggers.clear();
 			lock.unlock();
-			cout << "New data merge and begin processing: "<< CGPSTimeAlgorithm::GetTimeString(CurrentProcessingTime) << endl;
 		}
 		else
 		{
@@ -93,6 +87,9 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 			std::this_thread::sleep_for(std::chrono::seconds(10));
 			continue;
 		}
+
+		cout << "New data merge and begin processing: " << CGPSTimeAlgorithm::GetTimeString(CurrentProcessingTime) << endl;
+		cout << "Size of allTriggers: " << allTriggers.size() << endl;
 
 		auto start = std::chrono::high_resolution_clock::now();
 
@@ -114,7 +111,7 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 			unordered_map<int, triggerAtStation> triggerPool;
 			TriggerInfo& baseTrig = allTriggers[0];
 			//vector<int> recycleIdx;
-			
+
 			// 预留网络等待的时间，如果不满足则直接返回
 			CurrentProcessingTime = CGPSTimeAlgorithm::AddActPointSec(baseTrig.time, maxBaseLineAsTOA);
 			if ((CGPSTimeAlgorithm::ConvertGPSTimeToUnixTime(baseTrig.time) + 8 * 3600) > (time(nullptr) - waitTime)) break;
@@ -124,7 +121,7 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 
 			for (int j = 0; j < allTriggers.size(); ++j)
 			{
-				TriggerInfo &oneTrig = allTriggers[j];
+				TriggerInfo& oneTrig = allTriggers[j];
 				int trigSiteID = oneTrig.stationID;
 				double diffTime = baseTrig.time - oneTrig.time;
 
@@ -141,8 +138,8 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 						//recycleIdx.push_back(j);
 						triggerAtStation oneTriggerAtStation;
 						oneTriggerAtStation.staLocation = (LocSta(siteMap[trigSiteID].latitude * degree2radians,
-																  siteMap[trigSiteID].longitude * degree2radians,
-																  siteMap[trigSiteID].altitude / 1000.0));
+							siteMap[trigSiteID].longitude * degree2radians,
+							siteMap[trigSiteID].altitude / 1000.0));
 						oneTriggerAtStation.stationID = trigSiteID;
 						oneTriggerAtStation.triggers.emplace_back(oneTrig);
 						oneTriggerAtStation.triggers.back().trigIdx = j;
@@ -220,7 +217,7 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 
 				if (MinSq < ThresSqInitial)
 				{
-					vector<TriggerInfo> &oneComb = locCombinationPool[finalCombIdx];
+					vector<TriggerInfo>& oneComb = locCombinationPool[finalCombIdx];
 
 					vector<double> Loc_Time_One;
 					vector<LocSta> Stations_One;
@@ -242,10 +239,10 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 					if (oneComb.size() > 6) ThresSqFinal = ThresSqFinal * 1.0;
 					double distanceToBase = Stadistance(siteMap[oneComb[0].stationID].latitude, siteMap[oneComb[0].stationID].longitude, oneResult.Lat, oneResult.Lon);
 
-					if (LigTools::check_location_structure(Stations_One, oneResult_rad, checkTheta) && oneResult.sq< ThresSqFinal && (distanceToBase<1500.0))
+					if (LigTools::check_location_structure(Stations_One, oneResult_rad, checkTheta) && oneResult.sq < ThresSqFinal && (distanceToBase < 1500.0))
 					{
 						cout << "CountGeoLocationTimes " << CountGeoLocationTimes << "  Number of sites: " << Stations_One.size() << endl;
-						cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << " "<< distanceToBase << endl;
+						cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << " " << distanceToBase << endl;
 						// 把cout的内容写入NewData.txt里，调试使用
 						// 改成覆盖写入模式
 						GPSTime lig_time = oneComb[0].time;
@@ -279,7 +276,7 @@ void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo>& transTrigger
 
 		outfile_O.close();
 		// 计算经过的时间（以秒为单位）
-		std::cout <<"CountLocationPoints: "<< CountLocationPoints << " Elapsed time: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() << " seconds.\n";
+		std::cout << "CountLocationPoints: " << CountLocationPoints << " Elapsed time: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() << " seconds.\n";
 
 		if (config["mode"].as<string>() == "reProcess")
 			break;
