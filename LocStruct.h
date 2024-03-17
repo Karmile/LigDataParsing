@@ -76,4 +76,5 @@ LocSta FinalGeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time, Lo
 LocSta GeoLocation_GPU_Initial(vector<LocSta> Stations, vector<double> Loc_Time);
 LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time);
 LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta initResult = LocSta(0.0, 0.0, 0.0), int num_threads = 1);
+LocSta GeoLocation_OP_2(vector<LocSta> Stations, vector<double> Loc_Time, LocSta initResult = LocSta(0.0, 0.0, 0.0), int num_threads = 1);
 bool check_location_structure(const vector<LocSta>& Stations, LocSta& result);

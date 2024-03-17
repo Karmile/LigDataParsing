@@ -8,10 +8,11 @@ void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi, s
 		int init_size = transTriggers.size();
 
 		unique_lock<shared_mutex> lock(rwMutex);
+
 		transTriggers.insert(transTriggers.end(), cache.begin(), cache.end());
 		sort(transTriggers.begin(), transTriggers.end()); // 按照时间排序
 		transTriggers.erase(unique(transTriggers.begin(), transTriggers.end()), transTriggers.end()); // 去重
-
+		
 		lock.unlock();
 
 		//if (transTriggers.size())

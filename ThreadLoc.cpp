@@ -1,7 +1,9 @@
 #include "WorkThreads.h"
 #include <future>
+#include "include/ordered_map.h"
 
-void ProcessCombinationPool(vector<vector<TriggerInfo>>& locCombinationPool, unordered_map<int, triggerAtStation>& triggerPool, double& MinSq, LocSta& result, __int64& finalCombIdx, unsigned long long& CountGeoLocationTimes)
+using namespace tsl;
+void ProcessCombinationPool(vector<vector<TriggerInfo>>& locCombinationPool, ordered_map<int, triggerAtStation>& triggerPool, double& MinSq, LocSta& result, __int64& finalCombIdx, unsigned long long& CountGeoLocationTimes)
 {
 	double* sqList = new double[locCombinationPool.size()];
 	LocSta* resultList = new LocSta[locCombinationPool.size()];
@@ -29,11 +31,10 @@ void ProcessCombinationPool(vector<vector<TriggerInfo>>& locCombinationPool, uno
 			Stations_One.emplace_back(triggerPool[oneComb[j].stationID].staLocation);
 		}
 
-		//LocSta oneResult = GeoLocation_GPU(Stations_One, Loc_Time_One);
-		LocSta oneResult = GeoLocation_GPU_Initial(Stations_One, Loc_Time_One);
-		//LocSta oneResult = GeoLocation_OP(Stations_One, Loc_Time_One);
-		//
-		// LocSta oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, oneResult, num_threads);
+		LocSta oneResult = GeoLocation_GPU(Stations_One, Loc_Time_One);
+		//LocSta oneResult = GeoLocation_GPU_Initial(Stations_One, Loc_Time_One);
+		//LocSta oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, LocSta(0.0, 0.0, 0.0), num_threads);
+		//LocSta oneResult = GeoLocation_OP_2(Stations_One, Loc_Time_One, LocSta(0.0, 0.0, 0.0), num_threads);
 
 		sqList[m] = oneResult.sq;
 		resultList[m] = oneResult;
@@ -108,7 +109,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
 				}
 			}
 
-			unordered_map<int, triggerAtStation> triggerPool;
+			ordered_map<int, triggerAtStation> triggerPool;
 			TriggerInfo& baseTrig = allTriggers[0];
 			//vector<int> recycleIdx;
 
@@ -122,13 +123,15 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
 			for (int j = 0; j < allTriggers.size(); ++j)
 			{
 				TriggerInfo& oneTrig = allTriggers[j];
+				if (baseTrig.Value * oneTrig.Value < 0) continue;
+
 				int trigSiteID = oneTrig.stationID;
 				double diffTime = baseTrig.time - oneTrig.time;
 
 				if ((diffTime < -maxBaseLineAsTOA) || (diffTime > 0)) break;
 
 				// 这里第一个基站只放入一个数据，因为筛选标准是以第一个基站定标的，所以第一个基站只放入一个数据
-				if ((fabs(diffTime) <= siteTimeMap[baseTrig.stationID][oneTrig.stationID])) // || (baseTrig.stationID == oneTrig.stationID))
+				if ((fabs(diffTime) <= (siteTimeMap[baseTrig.stationID][oneTrig.stationID]+0.0001))) // || (baseTrig.stationID == oneTrig.stationID))
 				{
 					// 判断键值是否存在
 					if (triggerPool.find(trigSiteID) == triggerPool.end())
@@ -186,8 +189,8 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
 							map<int, double> sqMap;
 							for (auto& iter : locCombinationPool[finalCombIdx])
 							{
-								sqMap[iter.stationID] = (iter.time.m_Sec + iter.time.m_ActPointSec - result.occur_t) * cVeo -
-									Stadistance(siteMap[iter.stationID].latitude, siteMap[iter.stationID].longitude, result.Lat, result.Lon);
+								sqMap[iter.stationID] = abs( (iter.time.m_Sec + iter.time.m_ActPointSec - result.occur_t) * cVeo -
+									Stadistance(siteMap[iter.stationID].latitude, siteMap[iter.stationID].longitude, result.Lat, result.Lon) );
 							}
 							// 找出sqMap中最大的值的编号，去除这个站点
 							auto maxElement = max_element(sqMap.begin(), sqMap.end(), [](const pair<int, double>& p1, const pair<int, double>& p2) { return p1.second < p2.second; });
@@ -230,13 +233,15 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
 
 					LocSta oneResult = result;
 					// oneResult = FinalGeoLocation_GPU(Stations_One, Loc_Time_One, result);
-					oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, result);
+					//oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, result);
+					oneResult = GeoLocation_OP_2(Stations_One, Loc_Time_One, result);
 
 					LocSta oneResult_rad = oneResult;
 					oneResult_rad.Lat = oneResult.Lat * degree2radians;
 					oneResult_rad.Lon = oneResult.Lon * degree2radians;
 
-					if (oneComb.size() > 6) ThresSqFinal = ThresSqFinal * 1.0;
+					//ThresSqFinal = 1.5;
+					//if (oneComb.size() >= 6) ThresSqFinal = 3;
 					double distanceToBase = Stadistance(siteMap[oneComb[0].stationID].latitude, siteMap[oneComb[0].stationID].longitude, oneResult.Lat, oneResult.Lon);
 
 					if (LigTools::check_location_structure(Stations_One, oneResult_rad, checkTheta) && oneResult.sq < ThresSqFinal && (distanceToBase < 1500.0))
@@ -247,7 +252,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
 						// 改成覆盖写入模式
 						GPSTime lig_time = oneComb[0].time;
 						lig_time.set_second(oneResult.occur_t);
-						outfile_O << CGPSTimeAlgorithm::GetTimeStr(lig_time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << endl;
+						outfile_O << CGPSTimeAlgorithm::GetTimeStr(lig_time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << " "<< oneComb.size() << endl;
 						postThreadPool.enqueue(LigDataApi::PostLigResult, lig_time, oneResult, oneComb, siteMap);
 						CountLocationPoints++;
 					}

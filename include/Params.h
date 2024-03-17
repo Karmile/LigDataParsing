@@ -14,7 +14,7 @@
 #define F_OK 0 /* Test for existence.  */
 #define FLOAT_MAX 1000000000000
 #define Lattice 0.001
-#define boundaryW 90
+#define boundaryW 95
 #define boundaryE (boundaryW+(4096)*0.01)
 #define boundaryS 0
 #define boundaryN (boundaryS+(6144)*0.01)

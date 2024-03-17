@@ -69,7 +69,7 @@ bool LigTools::check_location_structure(const vector<LocSta> &Stations, LocSta &
 	return valid;
 }
 
-vector<vector<TriggerInfo>> LigTools::getLocationPool(unordered_map<int, triggerAtStation> &triggerPool)
+vector<vector<TriggerInfo>> LigTools::getLocationPool(ordered_map<int, triggerAtStation> &triggerPool)
 {
 
 	vector<vector<TriggerInfo>> locCombinationPool;
@@ -186,7 +186,7 @@ vector<vector<int>> getCombinations(vector<int> nums, int k) {
 	return combinations;
 }
 
-vector<vector<TriggerInfo>> LigTools::getLocationPool_p(unordered_map<int, triggerAtStation>& triggerPool, unordered_map<int, unordered_map<int, double>>& siteTimeMap, int nCombStas) {
+vector<vector<TriggerInfo>> LigTools::getLocationPool_p(ordered_map<int, triggerAtStation>& triggerPool, unordered_map<int, unordered_map<int, double>>& siteTimeMap, int nCombStas) {
 	vector<vector<TriggerInfo>> locCombinationPool;
 	vector<vector<TriggerInfo>> triggers;
 	vector<TriggerInfo> current;

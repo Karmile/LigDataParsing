@@ -47,7 +47,14 @@ LocSta FinalGeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time, Lo
 	LocCuda New_loccuda_Final;
 	New_loccuda_Final.GetLocPara(locPara_S, pLocSta, NumOfSta);
 	//resultFinal = New_loccuda_Final.Location3D_GPU(pDiffBe2s, NumOfSta);
-	resultFinal.occur_t = Loc_Time[0] - Stadistance(Stations[0].Lat * radians2degree, Stations[0].Lon * radians2degree, resultFinal.Lat, resultFinal.Lon) / cVeo;
+	//选取Loc_Time里最小的值的索引
+	int minIndex = 0;
+	for (int i = 1; i < Loc_Time.size(); i++)
+	{
+		if (Loc_Time[i] < Loc_Time[minIndex])
+			minIndex = i;
+	}
+	resultFinal.occur_t = Loc_Time[minIndex] - Stadistance(Stations[minIndex].Lat * radians2degree, Stations[minIndex].Lon * radians2degree, resultFinal.Lat, resultFinal.Lon) / cVeo;
 
 	delete[] pDiffBe2s;
 	delete[] pLocSta;
@@ -120,8 +127,15 @@ LocSta GeoLocation_GPU_Initial(vector<LocSta> Stations, vector<double> Loc_Time)
 		New_loccuda_Final.GetLocPara(locPara_S, pLocSta, NumOfSta);
 		result = New_loccuda_Final.Location3D_GPU(pDiffBe2s, NumOfSta);
 	}
-	result.occur_t = Loc_Time[0] - Stadistance(Stations[0].Lat * radians2degree, Stations[0].Lon * radians2degree, result.Lat, result.Lon) / cVeo;
 
+	int minIndex = 0;
+	for (int i = 1; i < Loc_Time.size(); i++)
+	{
+		if (Loc_Time[i] < Loc_Time[minIndex])
+			minIndex = i;
+	}
+	result.occur_t = Loc_Time[minIndex] - Stadistance(Stations[minIndex].Lat * radians2degree, Stations[minIndex].Lon * radians2degree, result.Lat, result.Lon) / cVeo;
+	
 	//check_location_structure(Stations, result);
 	delete[] pDiffBe2s;
 	delete[] pLocSta;
@@ -194,7 +208,22 @@ LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time)
 		New_loccuda_Final.GetLocPara(locPara_S, pLocSta, NumOfSta);
 		result = New_loccuda_Final.Location3D_GPU(pDiffBe2s, NumOfSta);
 	}
-	result.occur_t = Loc_Time[0] - Stadistance(Stations[0].Lat * radians2degree, Stations[0].Lon * radians2degree, result.Lat, result.Lon) / cVeo;
+
+	int minIndex = 0;
+	for (int i = 1; i < Loc_Time.size(); i++)
+	{
+		if (Loc_Time[i] < Loc_Time[minIndex])
+			minIndex = i;
+	}
+	result.occur_t = Loc_Time[minIndex] - Stadistance(Stations[minIndex].Lat * radians2degree, Stations[minIndex].Lon * radians2degree, result.Lat, result.Lon) / cVeo;
+
+	//result.occur_t = 0;
+	//for (int i = 0; i < Loc_Time.size(); i++)
+	//{
+	//	result.occur_t = result.occur_t + Loc_Time[i] - Stadistance(Stations[i].Lat * radians2degree, Stations[i].Lon * radians2degree, result.Lat, result.Lon) / cVeo;
+	//}
+	//result.occur_t = result.occur_t / (Loc_Time.size());
+
 	//check_location_structure(Stations, result);
 	delete[] pDiffBe2s;
 	delete[] pLocSta;
@@ -251,7 +280,7 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 			new CostFunctor(Loc_Time, Stations),Stations.size());
 	problem.AddResidualBlock(cost_function, nullptr, params);
 	// �������ѡ��
-	Bounds para = Bounds(90, 140, 0, 60, 0, 20);
+	Bounds para = Bounds(90.0, 140.0, 0.0, 60.0, 0, 20.0);
 	problem.SetParameterLowerBound(params, 0, para.boundS);
 	problem.SetParameterUpperBound(params, 0, para.boundN);
 	problem.SetParameterLowerBound(params, 1, para.boundW);
@@ -277,5 +306,114 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
 	result.sq = sqrt(summary.final_cost/ Stations.size()) * cVeo;
 	result.Lat *= radians2degree;
 	result.Lon *= radians2degree;
+	return result;
+}
+
+
+struct CostFunctor_2 {
+	const std::vector<double>& t_;
+	const std::vector<LocSta>& stations_;
+
+	CostFunctor_2(const std::vector<double>& t, const vector<LocSta>& stations)
+		: t_(t), stations_(stations) {}
+	template <typename T>
+	bool operator()(const T* const params, T* residual) const {
+		T dis1, dis2;
+
+		auto& st = stations_[0];
+		T dlon = T(st.Lon) - params[1];
+		T dlat = T(st.Lat) - params[0];
+		T a = sin(dlat / T(2)) * sin(dlat / T(2)) +
+			cos(params[0]) * cos(T(st.Lat)) *
+			sin(dlon / T(2)) * sin(dlon / T(2));
+		T c = T(2) * atan2(sqrt(a), sqrt(T(1) - a));
+		T hdist = c * R;
+		dis1 = sqrt(pow((T(st.h) - params[2]), 2) + pow(hdist, 2));
+
+		T disSta9 = dis1;
+
+		for (int i = 1; i < stations_.size(); i++) {
+
+			dis2 = dis1;
+
+			auto& sti = stations_[i];
+			dlon = T(sti.Lon) - params[1];
+			dlat = T(sti.Lat) - params[0];
+			a = sin(dlat / T(2)) * sin(dlat / T(2)) +
+				cos(params[0]) * cos(T(sti.Lat)) *
+				sin(dlon / T(2)) * sin(dlon / T(2));
+			c = T(2) * atan2(sqrt(a), sqrt(T(1) - a));
+			hdist = c * R;
+			dis1 = sqrt(pow((T(sti.h) - params[2]), 2) + pow(hdist, 2));
+			residual[i] = dis1 - dis2 - (T(t_[i])-T(t_[i-1]))* cVeo;
+		}
+
+		dis2 = dis1;
+		dis1 = disSta9;
+		residual[0] = dis1 - dis2 - (T(t_[0]) - T(t_[stations_.size() - 1])) * cVeo;
+
+		return true;
+	}
+};
+#define GOOGLE_STRIP_LOG 1
+
+LocSta GeoLocation_OP_2(vector<LocSta> Stations, vector<double> Loc_Time, LocSta initResult, int num_threads) {
+
+	// ���� Ceres ����
+	ceres::Problem problem;
+
+	// ���Ӳ���
+	double params[3] = { 30 * degree2radians, 115 * degree2radians, 1.0}; // ��ʼ����
+	//判断result输入是否存在
+	if (initResult.Lat != 0 && initResult.Lon != 0 && initResult.h != 0)
+	{
+		params[0] = initResult.Lat * degree2radians;
+		params[1] = initResult.Lon * degree2radians;
+		params[2] = initResult.h;
+	}
+
+	// ���Ӳв���
+	ceres::CostFunction* cost_function
+		= new ceres::AutoDiffCostFunction<CostFunctor_2, ceres::DYNAMIC, 3>(
+			new CostFunctor_2(Loc_Time, Stations), Stations.size());
+	problem.AddResidualBlock(cost_function, nullptr, params);
+	// �������ѡ��
+	Bounds para = Bounds(90.0, 140.0, 0.0, 60.0, 0, 20.0);
+	problem.SetParameterLowerBound(params, 0, para.boundS);
+	problem.SetParameterUpperBound(params, 0, para.boundN);
+	problem.SetParameterLowerBound(params, 1, para.boundW);
+	problem.SetParameterUpperBound(params, 1, para.boundE);
+	problem.SetParameterLowerBound(params, 2, para.boundhb);
+	problem.SetParameterUpperBound(params, 2, para.boundht);
+	ceres::Solver::Options options;
+	// 设置使用LM算法求解
+
+	//options.num_threads = omp_get_max_threads();
+
+	options.linear_solver_type = ceres::DENSE_QR;
+	options.minimizer_progress_to_stdout = false;
+	options.num_threads = num_threads; //omp_get_max_threads();
+	options.logging_type = ceres::SILENT;
+
+	// ���
+	ceres::Solver::Summary summary;
+	ceres::Solve(options, &problem, &summary);
+	//������
+   //std::cout << summary.BriefReport() << std::endl;
+   //std::cout << "Estimated parameters: ";
+	LocSta result;
+	result.sq = sqrt(summary.final_cost / Stations.size());
+	result.Lat = params[0] * radians2degree;
+	result.Lon = params[1] * radians2degree;
+	result.h = params[2];
+
+	int minIndex = 0;
+	for (int i = 1; i < Loc_Time.size(); i++)
+	{
+		if (Loc_Time[i] < Loc_Time[minIndex])
+			minIndex = i;
+	}
+	result.occur_t = Loc_Time[minIndex] - Stadistance(Stations[minIndex].Lat * radians2degree, Stations[minIndex].Lon * radians2degree, result.Lat, result.Lon) / cVeo;
+
 	return result;
 }

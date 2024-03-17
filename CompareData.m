@@ -1,87 +1,70 @@
 close all
 clear all
-% figure;
-% worldmap([10 40],[100 135]);  % 修改地图范围
-% load coastlines;
-% 
-% plotm(coastlat, coastlon, 'k')
-% 
-% hold on;
-% lat =[0.514705122,0.569870949,0.523494065]*57.3248;
-% lon = [2.07061672,2.01754308,1.88706219]*57.3248;
-%     scatterm(lat, lon, 3, 'filled','r');
 
-MAP = shaperead('.\lig_txt\boundarys\bou2_4p.shp');%Load map
-
-
-%% NEwData
-data = load("lig_txt/NewData2_Op3.txt");
-
-lat = data(:,2);
-lon = data(:,3);
-sq = data(:, 5);
-lat = lat(sq<5);
-lon = lon(sq<5);
-sq1 = sq(sq<5);
-
+% Load map
+MAP = shaperead('.\lig_txt\boundarys\bou2_4p.shp');
 figure;
-worldmap([10 40],[100 135]);  % 修改地图范围
 
-for i = 1:1:length(MAP)
-    plotm(MAP(i).Y,MAP(i).X,'k');
+% Plot map
+for i = 1:length(MAP)
+    plot(MAP(i).X,MAP(i).Y,'k');
     hold on;
 end
 
-hold on;
+% Load and filter data
+data = load("lig_txt/NewData2_T5_GPU+OP2.txt");
+lat = data(:,2);
+lon = data(:,3);
+sq = data(:, 5);
+lat = lat(sq<1);
+lon = lon(sq<1);
+sq1 = sq(sq<1);
+% scatter(lon, lat, 3, sq1, 'filled','b');
 
-scatterm(lat, lon, 5, 'filled','b');
-  
-    % legend('b','optimize');
-
+% Load and filter second data set
 data = load("lig_txt/NewData2.txt");
 lat = data(:,2);
 lon = data(:,3);
-sq = data(:, 5); 
+sq = data(:, 5);
+lat = lat(sq<1);
+lon = lon(sq<1);
+sq2 = sq(sq<1);
 
-lat = lat(sq<5);
-lon = lon(sq<5);
-sq2 = sq(sq<5);
+% Plot second data set
+scatter(lon, lat, 3, sq2, 'filled','r');
 
-% plotm(coastlat, coastlon, 'k')
+% Send request and decode response
+request = matlab.net.http.RequestMessage;
+uri = matlab.net.URI('http://222.195.83.28:18000/getHistoricalDataApi/20240304T160000/20240305T160000/str');
+response = sendRequest(uri,request);
+data = jsondecode(response.Body.Data);
 
+% Extract and plot data from response
+lat = [];
+lon = [];
+sqo = [];
+for i = 1:size(data)
+    lat = [lat,str2double(data{i}{2})];
+    lon = [lon,str2double(data{i}{3})];
+    sqo = [sqo,str2double(data{i}{5})];
+end
+scatter(lon, lat, 3, 'filled', 'g')
+
+% Set plot properties
+title('定位结果对比');
+axis equal;
+xlim([100 135]);
+ylim([10 40])
+
+%% Plot histograms
+figure;
 hold on;
+histogram(sq1, 0:0.025:2.5, 'FaceColor', 'b');
+histogram(sq2, 0:0.025:2, 'FaceColor', 'r');
+histogram(sqo/6, 0:0.025:2, 'FaceColor', 'g');
 
-scatterm(lat, lon, 5, sq, 'filled','r');
-
-
-% 
-% %%
-% % 读取json格式的文本文件
-% fid = fopen('lig_txt/USTCData.txt');
-% raw = fread(fid,inf);
-% str = char(raw');
-% fclose(fid);
-% data = jsondecode(str);
-% 
-% lat = [];
-% lon = [];
-% u_size = size(data);
-% for i = 1:u_size
-%     lat = [lat,str2double(data{i}{2})];
-%     lon = [lon,str2double(data{i}{3})];
-% end
-% % figure;
-% % worldmap([10 40],[100 135]);  % 修改地图范围
-% % load coastlines;
-% % 
-% % plotm(coastlat, coastlon, 'k')
-% 
-% hold on;
-% 
-% scatterm(lat, lon, 3, 'filled', 'g')
-% title('定位结果对比')
-
-
-
-
-
+% Set histogram properties
+legend('T5_GPU+OP2', 'USTC');
+title('定位结果对比');
+xlabel('定位误差');
+ylabel('定位点数');

@@ -48,7 +48,7 @@ vector<StationInfo> LigDataApi::GetStationData(){
 					site.gpsTime = item["GPSTime"].asString();
 					//site.id = item["id"].asInt();
 					site.GPSIsValid = item["GPSIsValid"].asBool();
-					sites_.emplace_back(site);
+					if(site.stationID<1000) sites_.emplace_back(site);
                 }
                 // 打印获取的站点信息
                 for (const auto& site : sites_) {
@@ -118,6 +118,7 @@ vector<TriggerInfo> LigDataApi::GetTriggersData() {
             cur_time += Duration("00000000T005700");
             auto res = client.Get(config_["trigger"]["api_nt"].as<string>() + cur_time.str().replace(0, 2, "20") + "/60");
             parse_result(res,allTriggers_);
+
             //if (allTriggers_.size() > 200000) break;
         }
 

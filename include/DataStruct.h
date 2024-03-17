@@ -223,8 +223,33 @@ struct GPSTime
 	
 	void set_second(double sec)
 	{
-		m_Sec = static_cast<int>(sec);
-		m_ActPointSec = sec - m_Sec;
+		if (sec < 0)
+		{
+			struct tm tm;
+			memset(&tm, 0, sizeof(tm));
+			tm.tm_year = this->m_Year + 2000 - 1900;
+			tm.tm_mon = this->m_Month - 1;
+			tm.tm_mday = this->m_Day;
+			tm.tm_hour = this->m_Hour;
+			tm.tm_min = this->m_Min;
+			tm.tm_sec = this->m_Sec;
+			time_t ft = mktime(&tm);
+			ft = ft - 1;
+			struct tm *p = localtime(&ft);
+			this->m_Year = p->tm_year + 1900 - 2000;
+			this->m_Month = p->tm_mon + 1;
+			this->m_Day = p->tm_mday;
+			this->m_Hour = p->tm_hour;
+			this->m_Min = p->tm_min;
+			this->m_Sec = p->tm_sec;
+
+			m_ActPointSec = sec + 1;
+		}
+		else
+		{
+			m_Sec = static_cast<int>(sec);
+			m_ActPointSec = sec - m_Sec;
+		}
 	}
 
 	bool m_isTimeVaild;
