@@ -115,8 +115,8 @@ vector<TriggerInfo> LigDataApi::GetTriggersData() {
         static GPSTime end_time(config_["reProcess"]["endTime"].as<string>());
         while (cur_time < end_time)
         {
-            cur_time += Duration("00000000T005700");
-            auto res = client.Get(config_["trigger"]["api_nt"].as<string>() + cur_time.str().replace(0, 2, "20") + "/60");
+            cur_time += Duration("00000000T000700");
+            auto res = client.Get(config_["trigger"]["api_nt"].as<string>() + cur_time.str().replace(0, 2, "20") + "/10");
             parse_result(res,allTriggers_);
 
             //if (allTriggers_.size() > 200000) break;

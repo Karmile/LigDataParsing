@@ -95,7 +95,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
 		auto start = std::chrono::high_resolution_clock::now();
 
 		ofstream outfile_O;
-		outfile_O.open("lig_txt/NewData2.txt", ios::out);
+		outfile_O.open("lig_txt/NewData_per.txt", ios::out);
 		// 开始定位
 
 		while (allTriggers.size())
@@ -253,7 +253,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
 						GPSTime lig_time = oneComb[0].time;
 						lig_time.set_second(oneResult.occur_t);
 						outfile_O << CGPSTimeAlgorithm::GetTimeStr(lig_time) << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << " "<< oneComb.size() << endl;
-						postThreadPool.enqueue(LigDataApi::PostLigResult, lig_time, oneResult, oneComb, siteMap);
+						//postThreadPool.enqueue(LigDataApi::PostLigResult, lig_time, oneResult, oneComb, siteMap);
 						CountLocationPoints++;
 					}
 					// cout << "Test2" << endl;

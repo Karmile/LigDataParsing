@@ -117,18 +117,57 @@ vector<vector<TriggerInfo>> LigTools::getLocationPool(ordered_map<int, triggerAt
 	return locCombinationPool;
 }
 
-void LigTools::permuteVector(vector<vector<TriggerInfo>> triggers, vector<TriggerInfo> &current, int index, vector<vector<TriggerInfo>> &CombinationPool, unordered_map<int, unordered_map<int, double>> &siteTimeMap)
+// void LigTools::permuteVector(vector<vector<TriggerInfo>> triggers, vector<TriggerInfo> &current, int index, vector<vector<TriggerInfo>> &CombinationPool, unordered_map<int, unordered_map<int, double>> &siteTimeMap)
+// {
+// 	if (index == triggers.size())
+// 	{
+// 		// 已经枚举到了最后一个数组，将其添加到最终结果，当前排列完成
+// 		CombinationPool.emplace_back(current);
+// 		return;
+// 	}
+
+// 	for (auto i = 0; i < triggers[index].size(); i++)
+// 	{
+// 		bool valid{true};
+// 		auto &tri{triggers[index][i]};
+// 		for (const auto &element : current)
+// 		{
+// 			// add 0.0001
+// 			if (abs(tri.time - element.time) > siteTimeMap[element.stationID][tri.stationID] + 0.0001)
+// 			{
+// 				valid = false;
+// 				break;
+// 			}
+// 			// if (tri.Value * element.Value < 0) {
+// 			//	valid = false;
+// 			//	break;
+// 			// }
+// 		}
+// 		if (valid)
+// 		{
+// 			current.emplace_back(tri);
+// 			permuteVector(triggers, current, index + 1, CombinationPool, siteTimeMap);
+// 			// 执行到这里，说明已经成功返回了一组组合，所以pop_back(）一个元素以便进行新的排列
+// 			current.pop_back();
+// 		}
+// 	}
+// }
+bool LigTools::permuteVector(vector<vector<TriggerInfo>> triggers, vector<TriggerInfo> &current, int index, 
+	vector<vector<TriggerInfo>> &CombinationPool, unordered_map<int, unordered_map<int, double>> &siteTimeMap,bool &added)
 {
 	if (index == triggers.size())
 	{
-		// 已经枚举到了最后一个数组，将其添加到最终结果，当前排列完成
-		CombinationPool.emplace_back(current);
-		return;
+		if (added && current.size() > 4)
+		{
+			// 已经枚举到了最后一个数组，且current状态已更新，将其添加到最终结果，当前排列完成
+			CombinationPool.emplace_back(current);
+			added = false;
+		}
+		return true;
 	}
-
+	bool valid{ true };
 	for (auto i = 0; i < triggers[index].size(); i++)
 	{
-		bool valid{true};
 		auto &tri{triggers[index][i]};
 		for (const auto &element : current)
 		{
@@ -138,19 +177,24 @@ void LigTools::permuteVector(vector<vector<TriggerInfo>> triggers, vector<Trigge
 				valid = false;
 				break;
 			}
-			// if (tri.Value * element.Value < 0) {
-			//	valid = false;
-			//	break;
-			// }
 		}
 		if (valid)
 		{
 			current.emplace_back(tri);
-			permuteVector(triggers, current, index + 1, CombinationPool, siteTimeMap);
-			// 执行到这里，说明已经成功返回了一组组合，所以pop_back(）一个元素以便进行新的排列
+			int k = index + 1;
+			added = valid;
+			//只有current新增了元素，才会允许向CombinationPool推送组合
+			bool end_flag = permuteVector(triggers, current, k, CombinationPool, siteTimeMap, added);
+			//如果某个站不符合条件，就跳过该站，继续向后遍历。当遍历完所有数组后，根据current是否新增元素判断是否需要更新CombinationPool
+			while (!end_flag && k < triggers.size())
+			{
+				k++;
+				end_flag = permuteVector(triggers, current, k, CombinationPool, siteTimeMap, added);
+			}
 			current.pop_back();
 		}
 	}
+  return valid;
 }
 
 // vector<vector<TriggerInfo>> LigTools::getLocationPool_p(map<int, triggerAtStation> &triggerPool, map<int, map<int, double>> &siteTimeMap)
@@ -206,7 +250,16 @@ vector<vector<TriggerInfo>> LigTools::getLocationPool_p(ordered_map<int, trigger
 		for (int i : combination) {
 			selectedTriggers.emplace_back(triggers[i]);
 		}
-		permuteVector(selectedTriggers, current, 0, locCombinationPool, siteTimeMap);
+		bool added = false;
+		try
+		{
+			permuteVector(selectedTriggers, current, 0, locCombinationPool, siteTimeMap, added);
+		}
+		catch (const std::exception&e)
+		{
+			cout << e.what() << endl;
+		}
+
 	}
 
 	return locCombinationPool;
