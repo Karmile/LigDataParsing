@@ -105,7 +105,7 @@ void LigDataApi::parse_result(const httplib::Result &res, vector<TriggerInfo>&al
 }
 vector<TriggerInfo> LigDataApi::GetTriggersData() {
     vector<TriggerInfo> allTriggers_;
-    allTriggers_.reserve(1000000);
+    //allTriggers_.reserve(1000000);
     httplib::Client client(config_["trigger"]["url"].as<string>());
     auto mode = config_["mode"].as<string>();
     if (mode == "reProcess")

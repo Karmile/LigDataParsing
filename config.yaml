@@ -19,12 +19,14 @@ reProcess:
   # endTime: 20230807T080500
   # startTime: 20230701T000000
   # endTime: 20230701T002100
-  startTime: 20240304T160000
-  endTime: 20240305T160000
+  # startTime: 20240304T160000
+  # endTime: 20240305T160000
   # startTime: 20240312T000000
   # endTime: 20240313T000000
+  startTime: 20240220T160000
+  endTime: 20240220T180000
 checkTheta: 0
-expTag: 240317_RT
+expTag: 240317_RT_QZL
 maxBaseLineAsTOA: 0.005 # 1500 km
 LocThresholdInitial: 1.0 # sq par station
 LocThresholdFinal: 1.0 #sq par station
