@@ -1,41 +1,67 @@
 #include "WorkThreads.h"
 
-void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi, shared_mutex& rwMutex, bool isReProcess ) {
-	while (1) {
-		// 获取最新的数据
-		vector<TriggerInfo> cache = LigDataApi.GetTriggersData();
-		// 合并数据
-		int init_size = transTriggers.size();
+void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi, shared_mutex& rwMutex, YAML::Node& config, bool isReProcess) {
 
-		unique_lock<shared_mutex> lock(rwMutex);
 
-		transTriggers.insert(transTriggers.end(), cache.begin(), cache.end());
-		sort(transTriggers.begin(), transTriggers.end()); // 按照时间排序
-		transTriggers.erase(unique(transTriggers.begin(), transTriggers.end()), transTriggers.end()); // 去重
-		
-		lock.unlock();
 
-		//if (transTriggers.size())
-		//{
-		//	for (int i = 1; i != transTriggers.size(); ++i) {
-		//		if (transTriggers[i].time == transTriggers[i - 1].time) {
-		//			cout << "Debug: " << transTriggers[i - 1].stationID << " " << transTriggers[i].stationID << endl;
-		//			cout << CGPSTimeAlgorithm::GetTimeStr(transTriggers[i - 1].time) << endl;
-		//			cout << CGPSTimeAlgorithm::GetTimeStr(transTriggers[i].time) << endl;
-		//		}
-		//	}
-		//}
+	if (isReProcess)
+	{
+		GPSTime till_time(config["reProcess"]["startTime"].as<string>());
+		GPSTime start_time(config["reProcess"]["startTime"].as<string>());
+		GPSTime end_time(config["reProcess"]["endTime"].as<string>());
+		while (1) {
 
-		cout << "cache size " << cache.size() << endl;
-		cout << "add " << transTriggers.size() - init_size << " new triggers" << endl;
-		cout << "current transTriggers size: " << transTriggers.size() << endl;
+			// 获取最新的数据
+			till_time += Duration("00000000T002000");
+			vector<TriggerInfo> cache = LigDataApi.GetHistoricalTriggerDataUntill(till_time, 20);
+			cache.erase(remove_if(cache.begin(), cache.end(), [&](const TriggerInfo& trigger) {
+				return trigger.time < start_time || trigger.time > end_time;
+				}), cache.end());
 
-		if (!isReProcess)
+
+			// 合并数据
+			int init_size = transTriggers.size();
+
+			unique_lock<shared_mutex> lock(rwMutex);
+			transTriggers.insert(transTriggers.end(), cache.begin(), cache.end());
+			sort(transTriggers.begin(), transTriggers.end()); // 按照时间排序
+			transTriggers.erase(unique(transTriggers.begin(), transTriggers.end()), transTriggers.end()); // 去重
+			lock.unlock();
+
+
+			cout << "cache size " << cache.size() << endl;
+			cout << "add " << transTriggers.size() - init_size << " new triggers" << endl;
+			cout << "current transTriggers size: " << transTriggers.size() << endl;
+
+			if (till_time >= end_time)
+				break;
+		}
+	}
+	else
+	{
+		while (1) {
+
+			// 获取最新的数据
+			vector<TriggerInfo> cache = LigDataApi.GetRealTimeTriggerData();
+
+			// 合并数据
+			int init_size = transTriggers.size();
+
+			unique_lock<shared_mutex> lock(rwMutex);
+			transTriggers.insert(transTriggers.end(), cache.begin(), cache.end());
+			sort(transTriggers.begin(), transTriggers.end()); // 按照时间排序
+			transTriggers.erase(unique(transTriggers.begin(), transTriggers.end()), transTriggers.end()); // 去重
+			lock.unlock();
+
+
+			cout << "cache size " << cache.size() << endl;
+			cout << "add " << transTriggers.size() - init_size << " new triggers" << endl;
+			cout << "current transTriggers size: " << transTriggers.size() << endl;
+
 			std::this_thread::sleep_for(std::chrono::seconds(60));
-		else
-			break;
-		//if (transTriggers.size() > 300000)
-		//	std::this_thread::sleep_for(std::chrono::seconds(60));
+
+		}
 
 	}
+
 }
