@@ -62,15 +62,15 @@ int main()
 		{ ThreadLoc(allTriggers, transTriggers, siteMap, siteTimeMap, rwMutex, config); });
 	if (config["mode"].as<string>() == "reProcess")
 	{
-		//loader = thread([&]()
-		//	{ threadLoadData(transTriggers, LigDataApi, rwMutex, keep_loading, true); });
-		threadLoadData(transTriggers, LigDataApi, rwMutex, true);
+		loader = thread([&]()
+			{ threadLoadData(transTriggers, LigDataApi, rwMutex, config, true); });
+		//threadLoadData(transTriggers, LigDataApi,  rwMutex, config, true);
 	}
 	else if (config["mode"].as<string>() == "realTime")
 	{
 		// 新线程，实时获取数据
 		loader = thread([&]()
-			{ threadLoadData(transTriggers, LigDataApi, rwMutex, false); });
+			{ threadLoadData(transTriggers, LigDataApi, rwMutex, config, false); });
 	}
 
 
