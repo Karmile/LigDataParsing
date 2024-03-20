@@ -17,8 +17,8 @@ using namespace std;
 
 // The thread of load data.
 void threadLoadData(deque<TriggerInfo> &allTriggers, LigDataApi &LigDataApi, shared_mutex &rwMutex,
-                    YAML::Node &config, bool isReProcess);
+                    YAML::Node &config, bool &keep_loading);
 void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo> &transTriggers,
                unordered_map<int, StationInfo> &siteMap,
                unordered_map<int, unordered_map<int, double>> &siteTimeMap, shared_mutex &rwMutex,
-               YAML::Node config);
+               YAML::Node config, bool &keep_loading);

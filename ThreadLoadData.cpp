@@ -1,8 +1,8 @@
 #include "WorkThreads.h"
 
 void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi,
-                    shared_mutex& rwMutex, YAML::Node& config, bool isReProcess) {
-  if (isReProcess) {
+                    shared_mutex& rwMutex, YAML::Node& config, bool& keep_loading) {
+  if (config["mode"].as<string>() == "reProcess") {
     GPSTime till_time(config["reProcess"]["startTime"].as<string>());
     GPSTime start_time(config["reProcess"]["startTime"].as<string>());
     GPSTime end_time(config["reProcess"]["endTime"].as<string>());
@@ -30,7 +30,10 @@ void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi,
       cout << "add " << transTriggers.size() - init_size << " new triggers" << endl;
       cout << "current transTriggers size: " << transTriggers.size() << endl;
 
-      if (till_time >= end_time) break;
+      if (till_time >= end_time) {
+        keep_loading = false;
+        break;
+      }
     }
   } else {
     while (1) {

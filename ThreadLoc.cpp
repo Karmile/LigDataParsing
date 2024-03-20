@@ -57,7 +57,7 @@ void ProcessCombinationPool(vector<vector<TriggerInfo>>& locCombinationPool,
 void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTriggers,
                unordered_map<int, StationInfo>& siteMap,
                unordered_map<int, unordered_map<int, double>>& siteTimeMap, shared_mutex& rwMutex,
-               YAML::Node config) {
+               YAML::Node config, bool& keep_loading) {
   ThreadPool postThreadPool{100};
   double maxBaseLineAsTOA = (config["maxBaseLineAsTOA"].as<double>());
   double LocThresholdInitial = config["LocThresholdInitial"].as<double>();
@@ -67,7 +67,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
   GPSTime CurrentProcessingTime = GPSTime();
 
   // 用于测试
-  while (1) {
+  while (keep_loading || transTriggers.size()) {
     //合并数据
     if (transTriggers.size()) {
       unique_lock<shared_mutex> lock(rwMutex);
@@ -290,7 +290,5 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
         << "CountLocationPoints: " << CountLocationPoints << " Elapsed time: "
         << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count()
         << " seconds.\n";
-
-    if (config["mode"].as<string>() == "reProcess") break;
   }
 }

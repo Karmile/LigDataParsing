@@ -53,17 +53,13 @@ int main() {
   bool keep_loading{true};
 
   // 开始定位
-  locThread = thread(
-      [&]() { ThreadLoc(allTriggers, transTriggers, siteMap, siteTimeMap, rwMutex, config); });
-  if (config["mode"].as<string>() == "reProcess") {
-    loader = thread([&]() { threadLoadData(transTriggers, LigDataApi, rwMutex, config, true); });
-    //threadLoadData(transTriggers, LigDataApi,  rwMutex, config, true);
-  } else if (config["mode"].as<string>() == "realTime") {
-    // 新线程，实时获取数据
-    loader = thread([&]() { threadLoadData(transTriggers, LigDataApi, rwMutex, config, false); });
-  }
+  locThread = thread([&]() {
+    ThreadLoc(allTriggers, transTriggers, siteMap, siteTimeMap, rwMutex, config, keep_loading);
+  });
+  loader =
+      thread([&]() { threadLoadData(transTriggers, LigDataApi, rwMutex, config, keep_loading); });
 
   locThread.join();
-  //loader.join();
+  loader.join();
   return 0;
 }
