@@ -1,0 +1,4 @@
+Language:       Cpp
+BasedOnStyle:   Google
+ReflowComments: false
+ColumnLimit: 100
