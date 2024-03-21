@@ -12,13 +12,13 @@ for i = 1:length(MAP)
 end
 
 % Load and filter data
-data = load("lig_txt/NewData2_T5_GPU+OP2.txt");
-lat = data(:,2);
-lon = data(:,3);
-sq = data(:, 5);
-lat = lat(sq<1);
-lon = lon(sq<1);
-sq1 = sq(sq<1);
+% data = load("lig_txt/NewData2_T5_GPU+OP2.txt");
+% lat = data(:,2);
+% lon = data(:,3);
+% sq = data(:, 5);
+% lat = lat(sq<1);
+% lon = lon(sq<1);
+% sq1 = sq(sq<1);
 % scatter(lon, lat, 3, sq1, 'filled','b');
 
 % Load and filter second data set
@@ -59,7 +59,7 @@ ylim([10 40])
 %% Plot histograms
 figure;
 hold on;
-histogram(sq1, 0:0.025:2.5, 'FaceColor', 'b');
+% histogram(sq1, 0:0.025:2.5, 'FaceColor', 'b');
 histogram(sq2, 0:0.025:2, 'FaceColor', 'r');
 histogram(sqo/6, 0:0.025:2, 'FaceColor', 'g');
 
