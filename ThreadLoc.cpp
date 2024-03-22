@@ -220,6 +220,8 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
         //std::cout << "After comb, Elapsed time: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() << " seconds.\n";
 
         if (MinSq < ThresSqInitial) {
+          CountLocationPoints++;
+
           vector<TriggerInfo>& oneComb = locCombinationPool[finalCombIdx];
 
           vector<double> Loc_Time_One;
@@ -245,9 +247,14 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
               Stadistance(siteMap[oneComb[0].stationID].latitude,
                           siteMap[oneComb[0].stationID].longitude, oneResult.Lat, oneResult.Lon);
 
+          cout << "Pending-----" << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " "
+                << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << " "
+                << distanceToBase << endl;
+
           if (LigTools::check_location_structure(Stations_One, oneResult_rad, checkTheta) &&
-              oneResult.sq < ThresSqFinal && (distanceToBase < 1500.0)) {
-            cout << "CountGeoLocationTimes " << CountGeoLocationTimes
+              oneResult.sq < ThresSqFinal && (distanceToBase < 4000.0)) {
+            cout << "CountGeoLocationTimes: " << CountGeoLocationTimes
+                 << "  CountLocationPoints: " << CountLocationPoints
                  << "  Number of sites: " << Stations_One.size() << endl;
             cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " "
                  << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << " "
@@ -261,7 +268,6 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
                       << oneComb.size() << endl;
             postThreadPool.enqueue(LigDataApi::PostLigResult, lig_time, oneResult, oneComb,
                                    siteMap);
-            CountLocationPoints++;
           }
           // cout << "Test2" << endl;
           // 需要删除的元素的索引
