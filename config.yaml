@@ -26,10 +26,10 @@ reProcess:
   # startTime: 20240220T160000
   # endTime: 20240220T164000
 checkTheta: 0
-expTag: 240317_RT.0.2
+expTag: 240317_RT.0.3
 maxBaseLineAsTOA: 0.005 # 1500 km
 LocThresholdInitial: 1.0 # sq par station
-LocThresholdFinal: 1.0 #sq par station
+LocThresholdFinal: 1.1 #sq par station
 OutputFilePath: ".\\lig_txt\\"
 gainCoefficient:
  1 : -0.41  

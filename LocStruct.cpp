@@ -359,7 +359,7 @@ LocSta GeoLocation_OP_2(vector<LocSta> Stations, vector<double> Loc_Time, LocSta
           new CostFunctor_2(Loc_Time, Stations), Stations.size());
   problem.AddResidualBlock(cost_function, nullptr, params);
   // �������ѡ��
-  Bounds para = Bounds(90.0, 140.0, 0.0, 60.0, 0, 20.0);
+  Bounds para = Bounds(40.0, 190.0, -60.0, 80.0, 0, 20.0);
   problem.SetParameterLowerBound(params, 0, para.boundS);
   problem.SetParameterUpperBound(params, 0, para.boundN);
   problem.SetParameterLowerBound(params, 1, para.boundW);
