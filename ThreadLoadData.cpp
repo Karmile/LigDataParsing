@@ -1,67 +1,60 @@
 #include "WorkThreads.h"
 
-void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi, shared_mutex& rwMutex, YAML::Node& config, bool isReProcess) {
+void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi,
+                    shared_mutex& rwMutex, YAML::Node& config, bool& keep_loading) {
+  if (config["mode"].as<string>() == "reProcess") {
+    GPSTime till_time(config["reProcess"]["startTime"].as<string>());
+    GPSTime start_time(config["reProcess"]["startTime"].as<string>());
+    GPSTime end_time(config["reProcess"]["endTime"].as<string>());
+    while (1) {
+      // ï¿½ï¿½È¡ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½
+      till_time += Duration("00000000T002000");
+      vector<TriggerInfo> cache = LigDataApi.GetHistoricalTriggerDataUntill(till_time, 20);
+      cache.erase(remove_if(cache.begin(), cache.end(),
+                            [&](const TriggerInfo& trigger) {
+                              return trigger.time < start_time || trigger.time > end_time;
+                            }),
+                  cache.end());
 
+      // ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½
+      int init_size = transTriggers.size();
 
+      unique_lock<shared_mutex> lock(rwMutex);
+      transTriggers.insert(transTriggers.end(), cache.begin(), cache.end());
+      sort(transTriggers.begin(), transTriggers.end());  // ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+      transTriggers.erase(unique(transTriggers.begin(), transTriggers.end()),
+                          transTriggers.end());  // È¥ï¿½ï¿½
+      lock.unlock();
 
-	if (isReProcess)
-	{
-		GPSTime till_time(config["reProcess"]["startTime"].as<string>());
-		GPSTime start_time(config["reProcess"]["startTime"].as<string>());
-		GPSTime end_time(config["reProcess"]["endTime"].as<string>());
-		while (1) {
+      cout << "cache size " << cache.size() << endl;
+      cout << "add " << transTriggers.size() - init_size << " new triggers" << endl;
+      cout << "current transTriggers size: " << transTriggers.size() << endl;
 
-			// »ñÈ¡×îÐÂµÄÊý¾Ý
-			till_time += Duration("00000000T002000");
-			vector<TriggerInfo> cache = LigDataApi.GetHistoricalTriggerDataUntill(till_time, 20);
-			cache.erase(remove_if(cache.begin(), cache.end(), [&](const TriggerInfo& trigger) {
-				return trigger.time < start_time || trigger.time > end_time;
-				}), cache.end());
+      if (till_time >= end_time) {
+        keep_loading = false;
+        break;
+      }
+    }
+  } else {
+    while (1) {
+      // ï¿½ï¿½È¡ï¿½ï¿½ï¿½Âµï¿½ï¿½ï¿½ï¿½ï¿½
+      vector<TriggerInfo> cache = LigDataApi.GetRealTimeTriggerData();
 
+      // ï¿½Ï²ï¿½ï¿½ï¿½ï¿½ï¿½
+      int init_size = transTriggers.size();
 
-			// ºÏ²¢Êý¾Ý
-			int init_size = transTriggers.size();
+      unique_lock<shared_mutex> lock(rwMutex);
+      transTriggers.insert(transTriggers.end(), cache.begin(), cache.end());
+      sort(transTriggers.begin(), transTriggers.end());  // ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+      transTriggers.erase(unique(transTriggers.begin(), transTriggers.end()),
+                          transTriggers.end());  // È¥ï¿½ï¿½
+      lock.unlock();
 
-			unique_lock<shared_mutex> lock(rwMutex);
-			transTriggers.insert(transTriggers.end(), cache.begin(), cache.end());
-			sort(transTriggers.begin(), transTriggers.end()); // °´ÕÕÊ±¼äÅÅÐò
-			transTriggers.erase(unique(transTriggers.begin(), transTriggers.end()), transTriggers.end()); // È¥ÖØ
-			lock.unlock();
+      cout << "cache size " << cache.size() << endl;
+      cout << "add " << transTriggers.size() - init_size << " new triggers" << endl;
+      cout << "current transTriggers size: " << transTriggers.size() << endl;
 
-
-			cout << "cache size " << cache.size() << endl;
-			cout << "add " << transTriggers.size() - init_size << " new triggers" << endl;
-			cout << "current transTriggers size: " << transTriggers.size() << endl;
-
-			if (till_time >= end_time)
-				break;
-		}
-	}
-	else
-	{
-		while (1) {
-
-			// »ñÈ¡×îÐÂµÄÊý¾Ý
-			vector<TriggerInfo> cache = LigDataApi.GetRealTimeTriggerData();
-
-			// ºÏ²¢Êý¾Ý
-			int init_size = transTriggers.size();
-
-			unique_lock<shared_mutex> lock(rwMutex);
-			transTriggers.insert(transTriggers.end(), cache.begin(), cache.end());
-			sort(transTriggers.begin(), transTriggers.end()); // °´ÕÕÊ±¼äÅÅÐò
-			transTriggers.erase(unique(transTriggers.begin(), transTriggers.end()), transTriggers.end()); // È¥ÖØ
-			lock.unlock();
-
-
-			cout << "cache size " << cache.size() << endl;
-			cout << "add " << transTriggers.size() - init_size << " new triggers" << endl;
-			cout << "current transTriggers size: " << transTriggers.size() << endl;
-
-			std::this_thread::sleep_for(std::chrono::seconds(60));
-
-		}
-
-	}
-
+      std::this_thread::sleep_for(std::chrono::seconds(60));
+    }
+  }
 }

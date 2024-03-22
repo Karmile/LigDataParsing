@@ -1,19 +1,24 @@
 #pragma once
-#include "LigDataApi.h"
-#include "GPSTimeAlgorithm.h"
-#include "Params.h"
-#include "LocStruct.h"
-#include <thread>
+#include <chrono>
 #include <map>
 #include <shared_mutex>
-#include <chrono>
-#include "WorkThreads.h"
-#include "LigTools.h"
-#include "./include/threadpool.h"
+#include <thread>
 #include <unordered_map>
+
+#include "./include/threadpool.h"
+#include "GPSTimeAlgorithm.h"
+#include "LigDataApi.h"
+#include "LigTools.h"
+#include "LocStruct.h"
+#include "Params.h"
+#include "WorkThreads.h"
 
 using namespace std;
 
 // The thread of load data.
-void threadLoadData(deque<TriggerInfo>& allTriggers, LigDataApi& LigDataApi, shared_mutex& rwMutex, YAML::Node& config, bool isReProcess);
-void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo> &transTriggers, unordered_map<int, StationInfo> &siteMap, unordered_map<int, unordered_map<int, double>> &siteTimeMap, shared_mutex &rwMutex, YAML::Node config);
+void threadLoadData(deque<TriggerInfo> &allTriggers, LigDataApi &LigDataApi, shared_mutex &rwMutex,
+                    YAML::Node &config, bool &keep_loading);
+void ThreadLoc(deque<TriggerInfo> &allTriggers, deque<TriggerInfo> &transTriggers,
+               unordered_map<int, StationInfo> &siteMap,
+               unordered_map<int, unordered_map<int, double>> &siteTimeMap, shared_mutex &rwMutex,
+               YAML::Node config, bool &keep_loading);
