@@ -12,13 +12,14 @@ for i = 1:length(MAP)
 end
 
 % Load and filter data
-data = load("lig_txt/NewData2_T5_GPU+OP2.txt");
+data = load("lig_txt/NewData2_T6_240317_RT.0.3_QZL.txt");
 lat = data(:,2);
 lon = data(:,3);
 sq = data(:, 5);
-lat = lat(sq<1);
-lon = lon(sq<1);
-sq1 = sq(sq<1);
+idx = lat>10&lat<40&lon>100&lon<135;
+lat = lat(idx);
+lon = lon(idx);
+sq1 = sq(idx);
 % scatter(lon, lat, 3, sq1, 'filled','b');
 
 % Load and filter second data set
@@ -26,9 +27,10 @@ data = load("lig_txt/NewData2.txt");
 lat = data(:,2);
 lon = data(:,3);
 sq = data(:, 5);
-lat = lat(sq<1);
-lon = lon(sq<1);
-sq2 = sq(sq<1);
+idx = lat>10&lat<40&lon>100&lon<135;
+lat = lat(idx);
+lon = lon(idx);
+sq2 = sq(idx);
 
 % Plot second data set
 scatter(lon, lat, 3, sq2, 'filled','r');
@@ -48,6 +50,11 @@ for i = 1:size(data)
     lon = [lon,str2double(data{i}{3})];
     sqo = [sqo,str2double(data{i}{5})];
 end
+idx = lat>10&lat<40&lon>100&lon<135;
+lat = lat(idx);
+lon = lon(idx);
+sqo = sqo(idx);
+
 scatter(lon, lat, 3, 'filled', 'g')
 
 % Set plot properties

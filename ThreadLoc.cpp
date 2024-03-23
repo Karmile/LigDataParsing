@@ -69,6 +69,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
   ofstream outfile_O;
 
   if (config["mode"].as<string>() == "reProcess") outfile_O.open("lig_txt/NewData2.txt", ios::out);
+  auto start = std::chrono::high_resolution_clock::now();
 
   // 用于测试
   while (keep_loading || transTriggers.size()) {
@@ -93,8 +94,6 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
     cout << "New data merge and begin processing: "
          << CGPSTimeAlgorithm::GetTimeString(CurrentProcessingTime) << endl;
     cout << "Size of allTriggers: " << allTriggers.size() << endl;
-
-    auto start = std::chrono::high_resolution_clock::now();
 
     // 开始定位
 
@@ -293,11 +292,12 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
       // 输出经过的时间
     }
     // 计算经过的时间（以秒为单位）
-    std::cout
-        << "CountLocationPoints: " << CountLocationPoints << " Elapsed time: "
-        << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count()
-        << " seconds.\n";
+
   }
 
   if (outfile_O.is_open()) outfile_O.close();
+  std::cout
+      << "CountLocationPoints: " << CountLocationPoints << " Elapsed time: "
+      << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count()
+      << " seconds.\n";
 }

@@ -136,7 +136,7 @@ LocSta GeoLocation_GPU_Initial(vector<LocSta> Stations, vector<double> Loc_Time)
 }
 
 LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time) {
-  LocPara locPara = LocPara{0.02 * PI / 180,
+  LocPara locPara = LocPara{0.08 * PI / 180,
                             boundaryW * PI / 180,
                             boundaryE * PI / 180,
                             boundaryS * PI / 180,
@@ -165,14 +165,14 @@ LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time) {
 
   result = loccuda.Location3D_GPU(pDiffBe2s, NumOfSta);
 
-  if (result.sq < 30) {
+  if (result.sq < 50) {
     LocPara locPara_S;
 
     locPara_S.Lat = 0.01 * PI / 180;
-    locPara_S.boundW = (result.Lon - 0.64) * PI / 180;
-    locPara_S.boundS = (result.Lat - 0.64) * PI / 180;
-    locPara_S.boundE = (result.Lon + 0.64001) * PI / 180;
-    locPara_S.boundN = (result.Lat + 0.64001) * PI / 180;
+    locPara_S.boundW = (result.Lon - 1.28) * PI / 180;
+    locPara_S.boundS = (result.Lat - 1.28) * PI / 180;
+    locPara_S.boundE = (result.Lon + 1.28001) * PI / 180;
+    locPara_S.boundN = (result.Lat + 1.28001) * PI / 180;
     locPara_S.boundht = 20;
     locPara_S.boundhb = 0;
     locPara_S.dh = 1;
