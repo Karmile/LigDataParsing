@@ -308,10 +308,18 @@ struct CostFunctor_2 {
     auto& st = stations_[0];
     T dlon = T(st.Lon) - params[1];
     T dlat = T(st.Lat) - params[0];
-    T a = sin(dlat / T(2)) * sin(dlat / T(2)) +
-          cos(params[0]) * cos(T(st.Lat)) * sin(dlon / T(2)) * sin(dlon / T(2));
-    T c = T(2) * atan2(sqrt(a), sqrt(T(1) - a));
-    T hdist = c * R;
+
+    //T a = sin(dlat / T(2)) * sin(dlat / T(2)) +
+    //      cos(params[0]) * cos(T(st.Lat)) * sin(dlon / T(2)) * sin(dlon / T(2));
+    //T c = T(2) * atan2(sqrt(a), sqrt(T(1) - a));
+    //T hdist = c * R;
+
+    T c1 = cos(params[0]);
+    T c2 = cos(T(st.Lat));
+    T d1 = sin(dlat / 2.0);
+    T d2 = sin(dlon / 2.0);
+    T hdist = 2.0 * T(R) * asin(sqrt(d1 * d1 + c1 * c2 * d2 * d2));
+
     dis1 = sqrt(pow((T(st.h) - params[2]), 2) + pow(hdist, 2));
 
     T disSta9 = dis1;
@@ -322,17 +330,22 @@ struct CostFunctor_2 {
       auto& sti = stations_[i];
       dlon = T(sti.Lon) - params[1];
       dlat = T(sti.Lat) - params[0];
-      a = sin(dlat / T(2)) * sin(dlat / T(2)) +
-          cos(params[0]) * cos(T(sti.Lat)) * sin(dlon / T(2)) * sin(dlon / T(2));
-      c = T(2) * atan2(sqrt(a), sqrt(T(1) - a));
-      hdist = c * R;
+      //a = sin(dlat / T(2)) * sin(dlat / T(2)) +
+      //    cos(params[0]) * cos(T(sti.Lat)) * sin(dlon / T(2)) * sin(dlon / T(2));
+      //c = T(2) * atan2(sqrt(a), sqrt(T(1) - a));
+      //hdist = c * R;
+
+      c1 = cos(params[0]);
+      c2 = cos(T(sti.Lat));
+      d1 = sin(dlat / 2.0);
+      d2 = sin(dlon / 2.0);
+      hdist = 2.0 * T(R) * asin(sqrt(d1 * d1 + c1 * c2 * d2 * d2));
+
       dis1 = sqrt(pow((T(sti.h) - params[2]), 2) + pow(hdist, 2));
       residual[i] = dis1 - dis2 - (T(t_[i]) - T(t_[i - 1])) * cVeo;
     }
 
-    dis2 = dis1;
-    dis1 = disSta9;
-    residual[0] = dis1 - dis2 - (T(t_[0]) - T(t_[stations_.size() - 1])) * cVeo;
+    residual[0] = disSta9 - dis1 - (T(t_[0]) - T(t_[stations_.size() - 1])) * cVeo;
 
     return true;
   }
