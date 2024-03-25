@@ -1,5 +1,6 @@
 #include <future>
-#include <numeric> 
+#include <numeric>
+
 #include "WorkThreads.h"
 #include "include/ordered_map.h"
 
@@ -133,7 +134,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
         {
           // 判断键值是否存在
           if (triggerPool.find(trigSiteID) == triggerPool.end()) {
-            if (triggerPool.size() >= 8) continue;  // New stategy, 使用距离最近的8个站点定位
+            if (triggerPool.size() >= 9) continue;  // New stategy, 使用距离最近的8个站点定位
 
             //recycleIdx.push_back(j);
             triggerAtStation oneTriggerAtStation;
@@ -176,61 +177,15 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
             LigTools::getLocationPool_p(triggerPool, siteTimeMap, triggerPool.size());
         auto t2 = std::chrono::high_resolution_clock::now();
         cout << "combination duration: " << std::chrono::duration<double>(t2 - t1).count() << endl;
-        if (locCombinationPool.size() > 0)
-
+        if (locCombinationPool.size() > 0) {
           ProcessCombinationPool(locCombinationPool, triggerPool, MinSq, result, finalCombIdx,
                                  CountGeoLocationTimes);
 
-        auto t3 = std::chrono::high_resolution_clock::now();
-        cout << "GPU duration: " << std::chrono::duration<double>(t3 - t2).count()
-             << "  combination size: " << locCombinationPool.size() << endl;
-        for (int i = 0; i < 2; ++i)  //最大站点数为8，最少可信站点数为6，迭代2次
-        {
-          if (MinSq > ThresSqInitial && triggerPool.size() > 6) {
-            if (locCombinationPool.size() > 0) {
-              map<int, double> sqMap;
-              for (auto& iter : locCombinationPool[finalCombIdx]) {
-                sqMap[iter.stationID] =
-                    abs((iter.time.m_Sec + iter.time.m_ActPointSec - result.occur_t) * cVeo -
-                        Stadistance(siteMap[iter.stationID].latitude,
-                                    siteMap[iter.stationID].longitude, result.Lat, result.Lon));
-              }
-              // 找出sqMap中最大的值的编号，去除这个站点
-              auto maxElement =
-                  max_element(sqMap.begin(), sqMap.end(),
-                              [](const pair<int, double>& p1, const pair<int, double>& p2) {
-                                return p1.second < p2.second;
-                              });
-              triggerPool.erase(maxElement->first);
-            }
+          auto t3 = std::chrono::high_resolution_clock::now();
+          cout << "GPU duration: " << std::chrono::duration<double>(t3 - t2).count()
+               << "  combination size: " << locCombinationPool.size()<< endl;
 
-            locCombinationPool =
-                LigTools::getLocationPool_p(triggerPool, siteTimeMap, triggerPool.size());
-            if (locCombinationPool.size() > 0)
-              ProcessCombinationPool(locCombinationPool, triggerPool, MinSq, result, finalCombIdx,
-                                     CountGeoLocationTimes);
-          }
-        }
-        auto t4 = std::chrono::high_resolution_clock::now();
-        cout << "re_calculate duration: " << std::chrono::duration<double>(t4 - t3).count() << endl;
-        //if (MinSq > ThresSqInitial && triggerPool.size() > 6)
-        //{
-        //	locCombinationPool = LigTools::getLocationPool_p(triggerPool, siteTimeMap, triggerPool.size() - 1);
-        //	if (locCombinationPool.size() > 0)
-        //		ProcessCombinationPool(locCombinationPool, triggerPool, MinSq, result, finalCombIdx, CountGeoLocationTimes);
-        //}
-
-        //if (MinSq > ThresSqInitial && triggerPool.size() > 7)
-        //{
-        //	locCombinationPool = LigTools::getLocationPool_p(triggerPool, siteTimeMap, triggerPool.size() - 2);
-        //	if (locCombinationPool.size() > 0)
-        //		ProcessCombinationPool(locCombinationPool, triggerPool, MinSq, result, finalCombIdx, CountGeoLocationTimes);
-        //}
-        //std::cout << "After comb, Elapsed time: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() << " seconds.\n";
-
-        if (MinSq < ThresSqInitial) {
           vector<TriggerInfo>& oneComb = locCombinationPool[finalCombIdx];
-
           vector<double> Loc_Time_One;
           vector<LocSta> Stations_One;
 
@@ -238,66 +193,129 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
             Loc_Time_One.emplace_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
             Stations_One.emplace_back(triggerPool[oneComb[j].stationID].staLocation);
           }
-
+          double a = abs(Loc_Time_One[0] - 0.74012);
+          cout << " current time: " << Loc_Time_One[0] << endl;
           LocSta oneResult = result;
-          // oneResult = FinalGeoLocation_GPU(Stations_One, Loc_Time_One, result);
-          //oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, result);
           oneResult = GeoLocation_OP_2(Stations_One, Loc_Time_One, result);
-          auto t5 = std::chrono::high_resolution_clock::now();
-          cout << "OP duration: " << std::chrono::duration<double>(t5 - t4).count() << endl;
-          LocSta oneResult_rad = oneResult;
-          oneResult_rad.Lat = oneResult.Lat * degree2radians;
-          oneResult_rad.Lon = oneResult.Lon * degree2radians;
+          for (int i = 0; i < 3; ++i)  //最大站点数为8，最少可信站点数为6，迭代2次
+          {
+            if (oneResult.sq > ThresSqInitial && Loc_Time_One.size() > 6) {
+              if (locCombinationPool.size() > 0) {
+                double current_sq, max_sq = -1;
+                int max_itr = -1;
+                for (int i = 0; i < locCombinationPool[finalCombIdx].size(); ++i) {
+                  auto& iter = locCombinationPool[finalCombIdx][i];
+                  current_sq =
+                      abs((iter.time.m_Sec + iter.time.m_ActPointSec - result.occur_t) * cVeo -
+                          Stadistance(siteMap[iter.stationID].latitude,
+                                      siteMap[iter.stationID].longitude, result.Lat, result.Lon));
+                  if (current_sq > max_sq) {
+                    max_sq = current_sq;
+                    max_itr = i;
+                  }
+                }
+                // 找出sqMap中最大的值的编号，去除这个站点
+                if (max_itr != -1) {
+                  locCombinationPool[finalCombIdx].erase(locCombinationPool[finalCombIdx].begin() +
+                                                         max_itr);
+                  Loc_Time_One.erase(Loc_Time_One.begin() + max_itr);
+                  Stations_One.erase(Stations_One.begin() + max_itr);
+                }
+                oneResult = GeoLocation_OP_2(Stations_One, Loc_Time_One, oneResult);
+              }
+            }
+          }
 
-          //ThresSqFinal = 1.5;
-          //if (oneComb.size() >= 6) ThresSqFinal = 3;
-          double distanceToBase =
-              Stadistance(siteMap[oneComb[0].stationID].latitude,
-                          siteMap[oneComb[0].stationID].longitude, oneResult.Lat, oneResult.Lon);
+          auto t4 = std::chrono::high_resolution_clock::now();
+          cout << "re_calculate duration: " << std::chrono::duration<double>(t4 - t3).count()
+               << endl;
+          //if (MinSq > ThresSqInitial && triggerPool.size() > 6)
+          //{
+          //	locCombinationPool = LigTools::getLocationPool_p(triggerPool, siteTimeMap, triggerPool.size() - 1);
+          //	if (locCombinationPool.size() > 0)
+          //		ProcessCombinationPool(locCombinationPool, triggerPool, MinSq, result, finalCombIdx, CountGeoLocationTimes);
+          //}
 
-          if (LigTools::check_location_structure(Stations_One, oneResult_rad, checkTheta) &&
-              oneResult.sq < ThresSqFinal && (distanceToBase < 1500.0)) {
-            auto t6 = std::chrono::high_resolution_clock::now();
-            auto time_range = Loc_Time_One.back() - Loc_Time_One[0];
-            time_ranges.push_back(time_range);
-            cout << "check structure duration: " << std::chrono::duration<double>(t6 - t5).count()
-                 << endl;             
-            cout << "CountGeoLocationTimes " << CountGeoLocationTimes
-                 << "  Number of sites: " << Stations_One.size()
-                 << "time range: " << time_range << endl;
-            cout << "<<****************************************************************************"
-                    "*****>>"<< endl;
-            cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " "
-                 << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << " "
-                 << distanceToBase << endl;
-            // 把cout的内容写入NewData.txt里，调试使用
-            // 改成覆盖写入模式
-            GPSTime lig_time = oneComb[0].time;
-            lig_time.set_second(oneResult.occur_t);
-            //outfile_O << CGPSTimeAlgorithm::GetTimeStr(lig_time) << " " << oneResult.Lat << " "
-            //          << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << " "
-            //          << oneComb.size() << endl;
-            //postThreadPool.enqueue(LigDataApi::PostLigResult, lig_time, oneResult, oneComb,
-            //siteMap);
-            CountLocationPoints++;
+          //if (MinSq > ThresSqInitial && triggerPool.size() > 7)
+          //{
+          //	locCombinationPool = LigTools::getLocationPool_p(triggerPool, siteTimeMap, triggerPool.size() - 2);
+          //	if (locCombinationPool.size() > 0)
+          //		ProcessCombinationPool(locCombinationPool, triggerPool, MinSq, result, finalCombIdx, CountGeoLocationTimes);
+          //}
+          //std::cout << "After comb, Elapsed time: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() << " seconds.\n";
+
+          if (oneResult.sq < ThresSqInitial) {
+            //vector<TriggerInfo>& oneComb = locCombinationPool[finalCombIdx];
+
+            //vector<double> Loc_Time_One;
+            //vector<LocSta> Stations_One;
+
+            //for (int j = 0; j < oneComb.size(); ++j) {
+            //  Loc_Time_One.emplace_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
+            //  Stations_One.emplace_back(triggerPool[oneComb[j].stationID].staLocation);
+            //}
+
+            //LocSta oneResult = result;
+            //// oneResult = FinalGeoLocation_GPU(Stations_One, Loc_Time_One, result);
+            ////oneResult = GeoLocation_OP(Stations_One, Loc_Time_One, result);
+            //oneResult = GeoLocation_OP_2(Stations_One, Loc_Time_One, result);
+            auto t5 = std::chrono::high_resolution_clock::now();
+            cout << "OP duration: " << std::chrono::duration<double>(t5 - t4).count() << endl;
+            LocSta oneResult_rad = oneResult;
+            oneResult_rad.Lat = oneResult.Lat * degree2radians;
+            oneResult_rad.Lon = oneResult.Lon * degree2radians;
+
+            //ThresSqFinal = 1.5;
+            //if (oneComb.size() >= 6) ThresSqFinal = 3;
+            double distanceToBase =
+                Stadistance(siteMap[oneComb[0].stationID].latitude,
+                            siteMap[oneComb[0].stationID].longitude, oneResult.Lat, oneResult.Lon);
+
+            if (LigTools::check_location_structure(Stations_One, oneResult_rad, checkTheta) &&
+                oneResult.sq < ThresSqFinal && (distanceToBase < 1500.0)) {
+              auto t6 = std::chrono::high_resolution_clock::now();
+              auto time_range = Loc_Time_One.back() - Loc_Time_One[0];
+              time_ranges.push_back(time_range);
+              cout << "check structure duration: " << std::chrono::duration<double>(t6 - t5).count()
+                   << endl;
+              cout << "CountGeoLocationTimes " << CountGeoLocationTimes
+                   << "  Number of sites: " << Stations_One.size() << "time range: " << time_range
+                   << endl;
+              cout << "<<**************************************************************************"
+                      "**"
+                      "*****>>"
+                   << endl;
+              cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " "
+                   << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << " "
+                   << distanceToBase << endl;
+              // 把cout的内容写入NewData.txt里，调试使用
+              // 改成覆盖写入模式
+              GPSTime lig_time = oneComb[0].time;
+              lig_time.set_second(oneResult.occur_t);
+              //outfile_O << CGPSTimeAlgorithm::GetTimeStr(lig_time) << " " << oneResult.Lat << " "
+              //          << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << " "
+              //          << oneComb.size() << endl;
+              //postThreadPool.enqueue(LigDataApi::PostLigResult, lig_time, oneResult, oneComb,
+              //siteMap);
+              CountLocationPoints++;
+            }
+            // cout << "Test2" << endl;
+            // 需要删除的元素的索引
+            std::vector<int> indices;
+            for (int i = 0; i < oneComb.size(); ++i) {
+              indices.emplace_back(oneComb[i].trigIdx);
+              // cout << siteMap[oneComb[i].stationID].name << " " << oneComb[i].Value << " " << CGPSTimeAlgorithm::GetTimeStr(oneComb[i].time) << " " << Stadistance(siteMap[oneComb[i].stationID].latitude, siteMap[oneComb[i].stationID].longitude, oneResult.Lat, oneResult.Lon) << endl;
+            }
+            // 从后向前删除
+            // shared_lock<shared_mutex> lock(rwMutex);
+            std::sort(indices.begin(), indices.end(), std::greater<int>());
+            for (auto i : indices) {
+              allTriggers.erase(allTriggers.begin() + i);
+            }
+            continue;
           }
-          // cout << "Test2" << endl;
-          // 需要删除的元素的索引
-          std::vector<int> indices;
-          for (int i = 0; i < oneComb.size(); ++i) {
-            indices.emplace_back(oneComb[i].trigIdx);
-            // cout << siteMap[oneComb[i].stationID].name << " " << oneComb[i].Value << " " << CGPSTimeAlgorithm::GetTimeStr(oneComb[i].time) << " " << Stadistance(siteMap[oneComb[i].stationID].latitude, siteMap[oneComb[i].stationID].longitude, oneResult.Lat, oneResult.Lon) << endl;
-          }
-          // 从后向前删除
-          // shared_lock<shared_mutex> lock(rwMutex);
-          std::sort(indices.begin(), indices.end(), std::greater<int>());
-          for (auto i : indices) {
-            allTriggers.erase(allTriggers.begin() + i);
-          }
-          continue;
         }
       }
-
       allTriggers.erase(allTriggers.begin());
       // 输出经过的时间
     }
