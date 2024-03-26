@@ -11,8 +11,8 @@ for i = 1:length(MAP)
     hold on;
 end
 
-% Load and filter data
-data = load("lig_txt/NewData2_T6_240317_RT.0.3_QZL.txt");
+% % Load and filter data
+data = load("lig_txt/031702_standard.txt");
 lat = data(:,2);
 lon = data(:,3);
 sq = data(:, 5);
@@ -38,7 +38,7 @@ scatter(lon, lat, 3, sq2, 'filled','r');
 % Send request and decode response
 request = matlab.net.http.RequestMessage;
 % uri = matlab.net.URI('http://222.195.83.28:18000/getHistoricalDataApi/20240304T160000/20240305T160000/str');
-uri = matlab.net.URI('http://222.195.83.28:18000/getHistoricalDataApi/20240323T010000/20240323T013000/str');
+uri = matlab.net.URI('http://222.195.83.28:18000/getHistoricalDataApi/20240305T040000/20240305T043000/str');
 
 % uri = matlab.net.URI('http://112.26.166.27:18000/getHistoricalLocationData/3/20240323093300/20240323145600?tag=240317_RT.0.4');
 
@@ -83,7 +83,7 @@ lat = lat(idx);
 lon = lon(idx);
 sqoJX = sqoJX(idx);
 
-scatter(lon, lat, 3, 'filled', 'k')
+%scatter(lon, lat, 3, 'filled', 'k')
 
 % Set plot properties
 title('定位结果对比');
@@ -97,7 +97,7 @@ hold on;
 histogram(sq1, 0:0.025:2.5, 'FaceColor', 'b');
 histogram(sq2, 0:0.025:2, 'FaceColor', 'r');
 histogram(sqo/6, 0:0.025:2, 'FaceColor', 'g');
-histogram(sqoJX, 0:0.025:2, 'FaceColor', 'k');
+%histogram(sqoJX, 0:0.025:2, 'FaceColor', 'k');
 
 % Set histogram properties
 legend('T5_GPU+OP2', 'USTC');
