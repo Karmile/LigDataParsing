@@ -14,9 +14,9 @@ shared_mutex rwMutex;
 std::string str = (".\\config.yaml");
 
 int main() {
-  std::string configFile = (".\\config.yaml");
+  std::string configFile = str;
   YAML::Node config;
-
+  std::cout << "program start!\n" << endl;
   try {
     config = YAML::LoadFile(configFile);
     std::cout << "load config successfully!\n" << endl;

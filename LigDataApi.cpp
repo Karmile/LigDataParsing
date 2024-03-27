@@ -23,8 +23,24 @@ LigDataApi::LigDataApi(const std::string str) {
 // 定义结构体来存储站点信息
 vector<StationInfo> LigDataApi::GetStationData() {
   vector<StationInfo> sites_;
-  httplib::Client client(config_["sites"]["url"].as<string>());
-  auto res = client.Get(config_["sites"]["api"].as<string>());
+  httplib::Client client(config_["sites"]["url_u"].as<string>());
+  httplib::Result res;
+
+  for (int i = 0; i < 6; i++) {
+    if (i < 3) {
+      res = client.Get(config_["sites"]["api"].as<string>());
+    } else {
+      res = httplib::Client(config_["sites"]["url_j"].as<string>())
+                .Get(config_["sites"]["api"].as<string>());
+      std::cout << "try url_j sites api!" << endl;
+    }
+    if (res && res->status == 200) {
+      break;
+    } else {
+      std::cout << "Request url failed. Reconnecting: " << i + 1 << std::endl;
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
+  }
   if (res && res->status == 200) {
     // 解析JSON响应
     JSONCPP_STRING err;
@@ -106,11 +122,26 @@ void LigDataApi::parse_result(const httplib::Result& res, vector<TriggerInfo>& a
 vector<TriggerInfo> LigDataApi::GetRealTimeTriggerData() {
   vector<TriggerInfo> allTriggers_;
   //allTriggers_.reserve(1000000);
-  httplib::Client client(config_["trigger"]["url"].as<string>());
+  httplib::Client client(config_["trigger"]["url_u"].as<string>());
+  httplib::Result res;
+  for (int i = 0; i < 6; i++) {
+    if (i < 3) {
+      res = client.Get(config_["trigger"]["api_rt"].as<string>());
 
-  auto res = client.Get(config_["trigger"]["api_rt"].as<string>());
+    } else {
+      res = httplib::Client(config_["trigger"]["url_j"].as<string>())
+                .Get(config_["trigger"]["api_rt"].as<string>());
+      std::cout << "try url_j trigger api!" << endl;
+    }
+    if (res && res->status == 200) {
+      break;
+    } else {
+      std::cout << "Request url failed. Reconnecting: " << i + 1 << std::endl;
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
+  }
+
   parse_result(res, allTriggers_);
-
   sort(allTriggers_.begin(), allTriggers_.end());  // 按照时间排序
   allTriggers_.erase(unique(allTriggers_.begin(), allTriggers_.end()), allTriggers_.end());  // 去重
   return allTriggers_;
@@ -120,9 +151,26 @@ vector<TriggerInfo> LigDataApi::GetHistoricalTriggerDataUntill(GPSTime TillTime,
   vector<TriggerInfo> allTriggers_;
   //allTriggers_.reserve(1000000);
   httplib::Client client(config_["trigger"]["url"].as<string>());
+  httplib::Result res;
 
-  auto res = client.Get(config_["trigger"]["api_nt"].as<string>() +
-                        TillTime.str().replace(0, 2, "20") + "/" + to_string(Minutes));
+  for (int i = 0; i < 6; i++) {
+    if (i < 3) {
+      res = client.Get(config_["trigger"]["api_nt"].as<string>() +
+                       TillTime.str().replace(0, 2, "20") + "/" + to_string(Minutes));
+    } else {
+      res = httplib::Client(config_["trigger"]["url_j"].as<string>())
+                .Get(config_["trigger"]["api_nt"].as<string>() +
+                     TillTime.str().replace(0, 2, "20") + "/" + to_string(Minutes));
+
+      std::cout << "try url_j trigger api!" << endl;
+    }
+    if (res && res->status == 200) {
+      break;
+    } else {
+      std::cout << "Request url failed. Reconnecting: " << i + 1 << std::endl;
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
+    }
+  }
   parse_result(res, allTriggers_);
 
   sort(allTriggers_.begin(), allTriggers_.end());  // 按照时间排序
@@ -218,15 +266,30 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
   }
 
   std::string json_data = Json::writeString(builder, data);
-  // 发送 POST 请求，并设置请求头和 JSON 数据
-  auto start = std::chrono::high_resolution_clock::now();
-  auto result =
-      client.Post(config_["ligresult"]["api"].as<string>() + "/1", json_data, "application/json");
-  auto end = std::chrono::high_resolution_clock::now();
-  // 计算经过的时间（以秒为单位）
-  double elapsed_seconds = std::chrono::duration<double>(end - start).count();
+  int max_retries = 3;
+  int retry_count = 0;
+  int retry_delay_seconds = 1;
 
-  if (result && result->status != 200) {
-    std::cout << "Request failed. Response: " << result->body;
+  while ((retry_count < max_retries) && (config_["OutputDataBase"].as<bool>() == true)) {
+    auto result =
+        client.Post(config_["ligresult"]["api"].as<string>() + "/1", json_data, "application/json");
+
+    if (result && result->status == 200) {
+      // 请求成功
+      break;  // 跳出重试循环
+    } else {
+      // 请求失败，输出错误信息
+      std::cout << "Request failed. result->status: " << result->status << std::endl;
+
+      // 增加重试计数
+      retry_count++;
+
+      // 延迟一段时间后进行重试
+      std::this_thread::sleep_for(std::chrono::seconds(retry_delay_seconds));
+    }
+  }
+
+  if (retry_count == max_retries) {
+    std::cout << "Max retries reached. Unable to connect to the server." << std::endl;
   }
 }
