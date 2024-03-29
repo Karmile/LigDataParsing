@@ -31,6 +31,7 @@ maxBaseLineAsTOA: 0.005 # 1500 km
 LocThresholdInitial: 1.0 # sq par station
 LocThresholdFinal: 1.1 #sq par station
 OutputFilePath: ".\\lig_txt\\"
+LogPath: ".\\log\\ldp.log"
 OutputDataBase: false
 gainCoefficient:
  1 : -0.41  

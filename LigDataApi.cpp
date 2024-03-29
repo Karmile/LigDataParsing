@@ -13,9 +13,9 @@ YAML::Node LigDataApi::config_ = YAML::LoadFile(".\\config.yaml");
 LigDataApi::LigDataApi(const std::string str) {
   try {
     config_ = YAML::LoadFile(str);
-    std::cout << "load config successfully!\n" << endl;
+    LOG_INFO("load config successfully!\n" << endl);
   } catch (const YAML::Exception& e) {
-    std::cerr << e.what() << "\n";
+    LOG_ERROR(e.what() << "\n" << endl);
     return;
   }
 }
@@ -32,12 +32,12 @@ vector<StationInfo> LigDataApi::GetStationData() {
     } else {
       res = httplib::Client(config_["sites"]["url_j"].as<string>())
                 .Get(config_["sites"]["api"].as<string>());
-      std::cout << "try url_j sites api!" << endl;
+      LOG_WARN("try url_j sites api!" << endl);
     }
     if (res && res->status == 200) {
       break;
     } else {
-      std::cout << "Request url failed. Reconnecting: " << i + 1 << std::endl;
+      LOG_WARN("Request url failed. Reconnecting: " << i + 1 << endl);
       std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
   }
@@ -70,21 +70,18 @@ vector<StationInfo> LigDataApi::GetStationData() {
         }
         // 打印获取的站点信息
         for (const auto& site : sites_) {
-          std::cout << "Name: " << site.name;
-          std::cout << "   StationID: " << site.stationID << std::endl;
+          LOG_INFO("Name: " << site.name <<"  StationID: " << site.stationID << endl);
         }
-        std::cout << "Sites info obtained from api:  " << sites_.size() << std::endl << endl;
+        LOG_INFO("Sites info obtained from api:  " << sites_.size() << endl);
       } else {
-        std::cerr << "Failed to parse JSON response" << std::endl;
-        std::cout << " :"
-                  << ":" << std::endl;
+        LOG_ERROR("Failed to parse JSON response" << endl);
       }
     } catch (const Json::Exception& e) {
       // 捕获其他 Json::Exception 异常
-      std::cout << "解析异常: " << e.what() << std::endl;
+      LOG_WARN("解析异常: " << e.what() << endl);
     }
   } else {
-    std::cout << "HTTP request failed" << std::endl;
+    LOG_WARN("HTTP request failed" << endl);
   }
   return sites_;
 }
@@ -108,13 +105,13 @@ void LigDataApi::parse_result(const httplib::Result& res, vector<TriggerInfo>& a
                       stoi(item[5].asString()), stof(item[6].asString()) / 1.0e9);
           alltriggers.emplace_back(trigger);
         }
-        cout << "Trigger info obtained from api: " << alltriggers.size() << endl << endl;
+        LOG_INFO("Trigger info obtained from api: " << alltriggers.size() << endl);
       } else {
-        std::cerr << "Failed to parse JSON response" << std::endl;
+        LOG_ERROR("Failed to parse JSON response" << endl);
       }
     } catch (const Json::Exception& e) {
       // 捕获其他 Json::Exception 异常
-      std::cout << "parsing fault!: " << e.what() << std::endl;
+      LOG_ERROR("parsing fault!: " << e.what() << endl);
     }
   }
 }
@@ -131,12 +128,12 @@ vector<TriggerInfo> LigDataApi::GetRealTimeTriggerData() {
     } else {
       res = httplib::Client(config_["trigger"]["url_j"].as<string>())
                 .Get(config_["trigger"]["api_rt"].as<string>());
-      std::cout << "try url_j trigger api!" << endl;
+      LOG_WARN("try url_j trigger api!" << endl);
     }
     if (res && res->status == 200) {
       break;
     } else {
-      std::cout << "Request url failed. Reconnecting: " << i + 1 << std::endl;
+      LOG_WARN("Request url failed. Reconnecting: " << i + 1 << endl);
       std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
   }
@@ -150,7 +147,7 @@ vector<TriggerInfo> LigDataApi::GetRealTimeTriggerData() {
 vector<TriggerInfo> LigDataApi::GetHistoricalTriggerDataUntill(GPSTime TillTime, int Minutes) {
   vector<TriggerInfo> allTriggers_;
   //allTriggers_.reserve(1000000);
-  httplib::Client client(config_["trigger"]["url"].as<string>());
+  httplib::Client client(config_["trigger"]["url_u"].as<string>());
   httplib::Result res;
 
   for (int i = 0; i < 6; i++) {
@@ -162,12 +159,12 @@ vector<TriggerInfo> LigDataApi::GetHistoricalTriggerDataUntill(GPSTime TillTime,
                 .Get(config_["trigger"]["api_nt"].as<string>() +
                      TillTime.str().replace(0, 2, "20") + "/" + to_string(Minutes));
 
-      std::cout << "try url_j trigger api!" << endl;
+      LOG_INFO("try url_j trigger api!" << endl);
     }
     if (res && res->status == 200) {
       break;
     } else {
-      std::cout << "Request url failed. Reconnecting: " << i + 1 << std::endl;
+      LOG_WARN("Request url failed. Reconnecting: " << i + 1 << endl);
       std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
   }
@@ -279,7 +276,7 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
       break;  // 跳出重试循环
     } else {
       // 请求失败，输出错误信息
-      std::cout << "Request failed. result->status: " << result->status << std::endl;
+      LOG_WARN("Request failed. result->status: " << result->status << endl);
 
       // 增加重试计数
       retry_count++;
@@ -290,6 +287,6 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
   }
 
   if (retry_count == max_retries) {
-    std::cout << "Max retries reached. Unable to connect to the server." << std::endl;
+    LOG_ERROR("Max retries reached. Unable to connect to the server." << endl);
   }
 }

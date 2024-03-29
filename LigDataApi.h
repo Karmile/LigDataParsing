@@ -7,6 +7,7 @@
 #include "./ThirdParty/LigLocCuda3Dx64/include/LocCuda.h"
 #include "DataStruct.h"
 #include "yaml-cpp/yaml.h"
+#include "log.h"
 
 class LigDataApi {
  public:

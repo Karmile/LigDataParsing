@@ -2,6 +2,7 @@
 
 #include "WorkThreads.h"
 #include "include/ordered_map.h"
+#include "log.h"
 
 using namespace tsl;
 void ProcessCombinationPool(vector<vector<TriggerInfo>>& locCombinationPool,
@@ -67,7 +68,6 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
   GPSTime CurrentProcessingTime = GPSTime();
 
   ofstream outfile_O;
-
   if (config["mode"].as<string>() == "reProcess") outfile_O.open("lig_txt/NewData2.txt", ios::out);
   auto start = std::chrono::high_resolution_clock::now();
 
@@ -86,14 +86,14 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
       transTriggers.clear();
       lock.unlock();
     } else {
-      cout << "Wait for new trigger data... 10s" << endl;
+      LOG_INFO("Wait for new trigger data... 10s" << endl);
       std::this_thread::sleep_for(std::chrono::seconds(10));
       continue;
     }
 
-    cout << "New data merge and begin processing: "
-         << CGPSTimeAlgorithm::GetTimeString(CurrentProcessingTime) << endl;
-    cout << "Size of allTriggers: " << allTriggers.size() << endl;
+    LOG_INFO("New data merge and begin processing: "
+             << CGPSTimeAlgorithm::GetTimeString(CurrentProcessingTime) << endl);
+    LOG_INFO("Size of allTriggers: " << allTriggers.size() << endl);
 
     // 开始定位
 
@@ -116,7 +116,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
           (time(nullptr) - waitTime))
         break;
 
-      //cout << "Time: " << (CGPSTimeAlgorithm::ConvertGPSTimeToUnixTime(baseTrig.time) + 8 * 3600) << " " << (time(nullptr) - waitTime) << endl;
+      //LOG_INFO( "Time: " << (CGPSTimeAlgorithm::ConvertGPSTimeToUnixTime(baseTrig.time) + 8 * 3600) << " " << (time(nullptr) - waitTime) );
       // CurrentProcessingTime = allTriggers[0].time;
 
       for (int j = 0; j < allTriggers.size(); ++j) {
@@ -168,7 +168,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
         __int64 finalCombIdx;
 
         vector<vector<TriggerInfo>> locCombinationPool;
-        //std::cout << "Before comb, Elapsed time: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() << " seconds.\n";
+        //std::LOG_INFO( "Before comb, Elapsed time: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() << " seconds.\n";
         if (MinSq > ThresSqInitial) {
           locCombinationPool =
               LigTools::getLocationPool_p(triggerPool, siteTimeMap, triggerPool.size());
@@ -218,7 +218,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
         //	if (locCombinationPool.size() > 0)
         //		ProcessCombinationPool(locCombinationPool, triggerPool, MinSq, result, finalCombIdx, CountGeoLocationTimes);
         //}
-        //std::cout << "After comb, Elapsed time: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() << " seconds.\n";
+        //std::LOG_INFO( "After comb, Elapsed time: " << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() << " seconds.\n";
 
         if (MinSq < ThresSqInitial) {
           CountLocationPoints++;
@@ -248,19 +248,19 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
               Stadistance(siteMap[oneComb[0].stationID].latitude,
                           siteMap[oneComb[0].stationID].longitude, oneResult.Lat, oneResult.Lon);
 
-          cout << "Pending-----" << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " "
-               << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq
-               << " " << distanceToBase << endl;
+          LOG_INFO("Pending-----" << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " "
+                                  << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h
+                                  << " " << oneResult.sq << " " << distanceToBase << endl);
 
           if (LigTools::check_location_structure(Stations_One, oneResult_rad, checkTheta) &&
               oneResult.sq < ThresSqFinal && (distanceToBase < 4000.0)) {
-            cout << "CountGeoLocationTimes: " << CountGeoLocationTimes
-                 << "  CountLocationPoints: " << CountLocationPoints
-                 << "  Number of sites: " << Stations_One.size() << endl;
-            cout << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " " << oneResult.Lat << " "
-                 << oneResult.Lon << " " << oneResult.h << " " << oneResult.sq << " "
-                 << distanceToBase << endl;
-            // 把cout的内容写入NewData.txt里，调试使用
+            LOG_INFO("CountGeoLocationTimes: "
+                     << CountGeoLocationTimes << "  CountLocationPoints: " << CountLocationPoints
+                     << "  Number of sites: " << Stations_One.size() << endl);
+            LOG_INFO(CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time)
+                     << " " << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h << " "
+                     << oneResult.sq << " " << distanceToBase << endl);
+            // 把LOG(INFO)的内容写入NewData.txt里，调试使用
             // 改成覆盖写入模式
             GPSTime lig_time = oneComb[0].time;
             lig_time.set_second(oneResult.occur_t);
@@ -271,12 +271,12 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
             postThreadPool.enqueue(LigDataApi::PostLigResult, lig_time, oneResult, oneComb,
                                    siteMap);
           }
-          // cout << "Test2" << endl;
+          // LOG_INFO( "Test2" );
           // 需要删除的元素的索引
           std::vector<int> indices;
           for (int i = 0; i < oneComb.size(); ++i) {
             indices.emplace_back(oneComb[i].trigIdx);
-            // cout << siteMap[oneComb[i].stationID].name << " " << oneComb[i].Value << " " << CGPSTimeAlgorithm::GetTimeStr(oneComb[i].time) << " " << Stadistance(siteMap[oneComb[i].stationID].latitude, siteMap[oneComb[i].stationID].longitude, oneResult.Lat, oneResult.Lon) << endl;
+            // LOG_INFO( siteMap[oneComb[i].stationID].name << " " << oneComb[i].Value << " " << CGPSTimeAlgorithm::GetTimeStr(oneComb[i].time) << " " << Stadistance(siteMap[oneComb[i].stationID].latitude, siteMap[oneComb[i].stationID].longitude, oneResult.Lat, oneResult.Lon) );
           }
           // 从后向前删除
           // shared_lock<shared_mutex> lock(rwMutex);
@@ -292,12 +292,12 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
       // 输出经过的时间
     }
     // 计算经过的时间（以秒为单位）
-
   }
 
   if (outfile_O.is_open()) outfile_O.close();
-  std::cout
-      << "CountLocationPoints: " << CountLocationPoints << " Elapsed time: "
+  LOG_INFO(
+      "CountLocationPoints: "
+      << CountLocationPoints << " Elapsed time: "
       << std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count()
-      << " seconds.\n";
+      << " seconds.\n");
 }
