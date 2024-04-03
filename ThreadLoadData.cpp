@@ -26,9 +26,9 @@ void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi,
                           transTriggers.end());  // ȥ��
       lock.unlock();
 
-      cout << "cache size " << cache.size() << endl;
-      cout << "add " << transTriggers.size() - init_size << " new triggers" << endl;
-      cout << "current transTriggers size: " << transTriggers.size() << endl;
+      LOG_INFO("cache size " << cache.size() << endl);
+      LOG_INFO("add " << transTriggers.size() - init_size << " new triggers" << endl);
+      LOG_INFO("current transTriggers size: " << transTriggers.size() << endl);
 
       if (till_time >= end_time) {
         keep_loading = false;
@@ -50,9 +50,9 @@ void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi,
                           transTriggers.end());  // ȥ��
       lock.unlock();
 
-      cout << "cache size " << cache.size() << endl;
-      cout << "add " << transTriggers.size() - init_size << " new triggers" << endl;
-      cout << "current transTriggers size: " << transTriggers.size() << endl;
+      LOG_INFO("cache size " << cache.size() << endl);
+      LOG_INFO("add " << transTriggers.size() - init_size << " new triggers" << endl);
+      LOG_INFO("current transTriggers size: " << transTriggers.size() << endl);
 
       std::this_thread::sleep_for(std::chrono::seconds(60));
     }

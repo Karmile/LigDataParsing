@@ -8,25 +8,29 @@
 #include "LigDataApi.h"
 #include "Params.h"
 #include "WorkThreads.h"
+#include "log.h"
+//#include "glog/logging.h"
 
 using namespace std;
 shared_mutex rwMutex;
 std::string str = (".\\config.yaml");
 
 int main() {
-  std::string configFile = (".\\config.yaml");
+  std::string configFile = str;
   YAML::Node config;
-
   try {
     config = YAML::LoadFile(configFile);
-    std::cout << "load config successfully!\n" << endl;
   } catch (const YAML::Exception &e) {
     std::cerr << e.what() << "\n";
     return 1;
   }
-
+  std::string file_path = config["LogPath"].as<string>();
+  if (Logger::Init(file_path)) {
+    LOG_INFO("Logger init successfully!" << endl);
+  } else {
+    LOG_WARN("Cannot open log file！");
+  }
   LigDataApi LigDataApi(configFile);
-
   // sites 不用重复获取，一段时间内获取一次即可
   vector<StationInfo> sites = LigDataApi.GetStationData();
 

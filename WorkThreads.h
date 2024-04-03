@@ -11,8 +11,6 @@
 #include "LigTools.h"
 #include "LocStruct.h"
 #include "Params.h"
-#include "WorkThreads.h"
-
 using namespace std;
 
 // The thread of load data.
