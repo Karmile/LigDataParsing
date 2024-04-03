@@ -232,7 +232,7 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
   data["residual"] = res.sq;
   data["numOfSta"] = oneComb.size();
   data["peakCurrent"] = oneComb[min_idx].Value * min_dis * F;
-  data["type"] = (res.h < 2.0) ? "RS" : "IC";
+  data["type"] = (res.h < 4.0) ? "RS" : "IC";
   data["datetime"] = lig_time.str().replace(0, 2, "20");
   data["nameOfSta"] = total_names;
   data["IDOfSta"] = total_IDs;
