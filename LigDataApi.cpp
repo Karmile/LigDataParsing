@@ -276,7 +276,7 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
       break;  // 跳出重试循环
     } else {
       // 请求失败，输出错误信息
-      LOG_WARN("Request failed. result->status: " << result->status << endl);
+      LOG_WARN("Post to database failed. Reconnecting: " << retry_count + 1 << endl);
 
       // 增加重试计数
       retry_count++;

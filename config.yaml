@@ -12,7 +12,7 @@ ligresult:
   url: "http://112.26.166.27:18000"
   api: "/writeLigResult"
 scale: 20
-waitTime: 180
+waitTime: 90
 mode: realTime #reProcess   #reProcess #  
 reProcess:
   # startTime: 20230807T080300
@@ -32,7 +32,7 @@ LocThresholdInitial: 1.0 # sq par station
 LocThresholdFinal: 1.1 #sq par station
 OutputFilePath: ".\\lig_txt\\"
 LogPath: ".\\log\\"
-OutputDataBase: false
+OutputDataBase: true
 gainCoefficient:
  1 : -0.41  
  2 : -0.524 
