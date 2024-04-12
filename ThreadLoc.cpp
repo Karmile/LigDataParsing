@@ -293,7 +293,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
     }
     // 计算经过的时间（以秒为单位）
   }
-
+  LigDataApi::disconnect();
   if (outfile_O.is_open()) outfile_O.close();
   LOG_INFO(
       "CountLocationPoints: "

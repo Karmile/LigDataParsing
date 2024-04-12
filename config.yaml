@@ -23,8 +23,8 @@ reProcess:
   # endTime: 20240305T160000
   # startTime: 20240312T000000
   # endTime: 20240313T000000
-  startTime: 20240323T010000
-  endTime: 20240323T013000
+  startTime: 20240323T090000
+  endTime: 20240323T090100
 checkTheta: 0
 expTag: 240317_RT.0.5
 maxBaseLineAsTOA: 0.005 # 1500 km
