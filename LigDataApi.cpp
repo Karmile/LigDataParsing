@@ -121,23 +121,33 @@ vector<TriggerInfo> LigDataApi::GetRealTimeTriggerData() {
   //allTriggers_.reserve(1000000);
   httplib::Client client(config_["trigger"]["url_u"].as<string>());
   httplib::Result res;
-  for (int i = 0; i < 6; i++) {
-    if (i < 3) {
-      res = client.Get(config_["trigger"]["api_rt"].as<string>());
+  try {
+    for (int i = 0; i < 6; i++) {
+      if (i < 3) {
+        res = client.Get(config_["trigger"]["api_rt"].as<string>());
 
-    } else {
-      res = httplib::Client(config_["trigger"]["url_j"].as<string>())
-                .Get(config_["trigger"]["api_rt"].as<string>());
-      LOG_WARN("try url_j trigger api!" << endl);
+      } else {
+        res = httplib::Client(config_["trigger"]["url_j"].as<string>())
+                  .Get(config_["trigger"]["api_rt"].as<string>());
+        LOG_WARN("try url_j trigger api!" << endl);
+      }
+      if (res && res->status == 200) {
+        LOG_INFO("Request url successfully!" << endl);
+        break;
+      } else if (res) {
+        LOG_WARN("Request url failed, res status: " << res->status << " Reconnecting: " << i + 1
+                                                    << endl);
+      } else {
+        LOG_WARN("Get res status failed. Reconnecting: " << i + 1 << endl);
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+      }
+      if (i == 5) {
+        return allTriggers_;
+      }
     }
-    if (res && res->status == 200) {
-      break;
-    } else {
-      LOG_WARN("Request url failed. Reconnecting: " << i + 1 << endl);
-      std::this_thread::sleep_for(std::chrono::microseconds(100));
-    }
+  } catch (const std::exception& e) {
+    LOG_ERROR("Get res status failed!" << e.what() << endl);
   }
-
   parse_result(res, allTriggers_);
   sort(allTriggers_.begin(), allTriggers_.end());  // 按照时间排序
   allTriggers_.erase(unique(allTriggers_.begin(), allTriggers_.end()), allTriggers_.end());  // 去重
