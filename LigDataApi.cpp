@@ -133,7 +133,13 @@ vector<TriggerInfo> LigDataApi::GetRealTimeTriggerData() {
       }
       if (res && res->status == 200) {
         LOG_INFO("Request url successfully!" << endl);
-        break;
+        parse_result(res, allTriggers_);
+        sort(allTriggers_.begin(), allTriggers_.end());  // 按照时间排序
+        allTriggers_.erase(unique(allTriggers_.begin(), allTriggers_.end()),
+                           allTriggers_.end());  // 去重
+        if (allTriggers_.size() != 0) {
+          return allTriggers_;
+        }
       } else if (res) {
         LOG_WARN("Request url failed, res status: " << res->status << " Reconnecting: " << i + 1
                                                     << endl);
@@ -142,16 +148,13 @@ vector<TriggerInfo> LigDataApi::GetRealTimeTriggerData() {
         std::this_thread::sleep_for(std::chrono::microseconds(100));
       }
       if (i == 5) {
+        LOG_WARN("Unable to obtain trigger data!" << endl);
         return allTriggers_;
       }
     }
   } catch (const std::exception& e) {
     LOG_ERROR("Get res status failed!" << e.what() << endl);
   }
-  parse_result(res, allTriggers_);
-  sort(allTriggers_.begin(), allTriggers_.end());  // 按照时间排序
-  allTriggers_.erase(unique(allTriggers_.begin(), allTriggers_.end()), allTriggers_.end());  // 去重
-  return allTriggers_;
 }
 
 vector<TriggerInfo> LigDataApi::GetHistoricalTriggerDataUntill(GPSTime TillTime, int Minutes) {
@@ -159,30 +162,42 @@ vector<TriggerInfo> LigDataApi::GetHistoricalTriggerDataUntill(GPSTime TillTime,
   //allTriggers_.reserve(1000000);
   httplib::Client client(config_["trigger"]["url_u"].as<string>());
   httplib::Result res;
+  try {
+    for (int i = 0; i < 6; i++) {
+      if (i < 3) {
+        res = client.Get(config_["trigger"]["api_nt"].as<string>() +
+                         TillTime.str().replace(0, 2, "20") + "/" + to_string(Minutes));
 
-  for (int i = 0; i < 6; i++) {
-    if (i < 3) {
-      res = client.Get(config_["trigger"]["api_nt"].as<string>() +
+      } else {
+        res = httplib::Client(config_["trigger"]["url_j"].as<string>())
+                  .Get(config_["trigger"]["api_nt"].as<string>() +
                        TillTime.str().replace(0, 2, "20") + "/" + to_string(Minutes));
-    } else {
-      res = httplib::Client(config_["trigger"]["url_j"].as<string>())
-                .Get(config_["trigger"]["api_nt"].as<string>() +
-                     TillTime.str().replace(0, 2, "20") + "/" + to_string(Minutes));
-
-      LOG_INFO("try url_j trigger api!" << endl);
+        LOG_WARN("try url_j trigger api!" << endl);
+      }
+      if (res && res->status == 200) {
+        LOG_INFO("Request url successfully!" << endl);
+        parse_result(res, allTriggers_);
+        sort(allTriggers_.begin(), allTriggers_.end());  // 按照时间排序
+        allTriggers_.erase(unique(allTriggers_.begin(), allTriggers_.end()),
+                           allTriggers_.end());  // 去重
+        if (allTriggers_.size() != 0) {
+          return allTriggers_;
+        }
+      } else if (res) {
+        LOG_WARN("Request url failed, res status: " << res->status << " Reconnecting: " << i + 1
+                                                    << endl);
+      } else {
+        LOG_WARN("Get res status failed. Reconnecting: " << i + 1 << endl);
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+      }
+      if (i == 5) {
+        LOG_WARN("Unable to obtain trigger data!" << endl);
+        return allTriggers_;
+      }
     }
-    if (res && res->status == 200) {
-      break;
-    } else {
-      LOG_WARN("Request url failed. Reconnecting: " << i + 1 << endl);
-      std::this_thread::sleep_for(std::chrono::microseconds(100));
-    }
+  } catch (const std::exception& e) {
+    LOG_ERROR("Get res status failed!" << e.what() << endl);
   }
-  parse_result(res, allTriggers_);
-
-  sort(allTriggers_.begin(), allTriggers_.end());  // 按照时间排序
-  allTriggers_.erase(unique(allTriggers_.begin(), allTriggers_.end()), allTriggers_.end());  // 去重
-  return allTriggers_;
 }
 
 void LigDataApi::connect() {
@@ -207,7 +222,7 @@ void LigDataApi::sendDataViaMQTT(const std::string& data) {
     }
     mqtt::message_ptr msg = mqtt::make_message(topic, data);
     client_.publish(msg);
-    LOG_INFO("MQTT publish message success! " << std::endl);
+    LOG_INFO("MQTT publish message successfully! " << std::endl);
   } catch (const mqtt::exception& exc) {
     LOG_ERROR("MQTT Error: " << exc.what() << std::endl);
   }
