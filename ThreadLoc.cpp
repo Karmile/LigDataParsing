@@ -82,12 +82,18 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
       }
       sort(allTriggers.begin(), allTriggers.end());  // 按照时间排序
       allTriggers.erase(unique(allTriggers.begin(), allTriggers.end()), allTriggers.end());  // 去重
-
       transTriggers.clear();
+      AccumulatedIdleTime = 0;
       lock.unlock();
     } else {
-      LOG_INFO("Wait for new trigger data... 10s" << endl);
+      LOG_INFO("Wait for new trigger data... 10s, accumulated idle time: " << AccumulatedIdleTime
+                                                                           << endl);
       std::this_thread::sleep_for(std::chrono::seconds(10));
+      if (AccumulatedIdleTime % 600 == 0 && AccumulatedIdleTime != 0) {
+        LigDataApi::sendDataViaMQTT(topic_w, "十分钟未定位闪电数据！");
+        LOG_WARN(AccumulatedIdleTime << " second without locating lightning data!" << endl);
+      }
+      AccumulatedIdleTime += 10;
       continue;
     }
 

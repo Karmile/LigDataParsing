@@ -149,6 +149,8 @@ vector<TriggerInfo> LigDataApi::GetRealTimeTriggerData() {
       }
       if (i == 5) {
         LOG_WARN("Unable to obtain trigger data!" << endl);
+        LigDataApi::sendDataViaMQTT(
+            topic_w, "Max retries reached. Unable to obtain valid trigger from url!");
         return allTriggers_;
       }
     }
@@ -215,16 +217,18 @@ void LigDataApi::disconnect() {
   }
 }
 
-void LigDataApi::sendDataViaMQTT(const std::string& data) {
-  try {
-    if (!client_.is_connected()) {
-      connect();
+void LigDataApi::sendDataViaMQTT(const std::string& topic, const std::string& data) {
+  if (config_["mode"].as<string>() == "realTime") {
+    try {
+      if (!client_.is_connected()) {
+        connect();
+      }
+      mqtt::message_ptr msg = mqtt::make_message(topic, data);
+      client_.publish(msg);
+      LOG_INFO("MQTT publish message success! " << std::endl);
+    } catch (const mqtt::exception& exc) {
+      LOG_ERROR("MQTT Error: " << exc.what() << std::endl);
     }
-    mqtt::message_ptr msg = mqtt::make_message(topic, data);
-    client_.publish(msg);
-    LOG_INFO("MQTT publish message successfully! " << std::endl);
-  } catch (const mqtt::exception& exc) {
-    LOG_ERROR("MQTT Error: " << exc.what() << std::endl);
   }
 }
 
@@ -335,8 +339,9 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
   }
 
   if (retry_count == max_retries) {
-    LOG_ERROR("Max retries reached. Unable to connect to the server." << endl);
+    LOG_ERROR("Max retries reached. Unable to connect to the server!" << endl);
+    LigDataApi::sendDataViaMQTT(topic_w, "Max retries reached. Unable to connect to the server!");
   }
 
-  sendDataViaMQTT(json_data);
+  sendDataViaMQTT(topic_l, json_data);
 }
