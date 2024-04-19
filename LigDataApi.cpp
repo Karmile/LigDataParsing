@@ -218,14 +218,14 @@ void LigDataApi::disconnect() {
 }
 
 void LigDataApi::sendDataViaMQTT(const std::string& topic, const std::string& data) {
-  if (config_["mode"].as<string>() == "realTime") {
+  if (config_["mode"].as<string>() == "realTime" && config_["OutputMQTT"].as<bool>() == true) {
     try {
       if (!client_.is_connected()) {
         connect();
       }
       mqtt::message_ptr msg = mqtt::make_message(topic, data);
       client_.publish(msg);
-      LOG_INFO("MQTT publish message success! " << std::endl);
+      //LOG_INFO("MQTT publish message success! " << std::endl);
     } catch (const mqtt::exception& exc) {
       LOG_ERROR("MQTT Error: " << exc.what() << std::endl);
     }
@@ -295,20 +295,22 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
   data["locationMethod"] = "TOA";
 
   // Write to .loc file
-  FILE* fp = fopen(
-      LigTools::GetLocFileName(config_["OutputFilePath"].as<string>(), lig_time).c_str(), "ab");
-  if (fp) {
-    std::string str = CGPSTimeAlgorithm::GetTimeString(lig_time) + " " + std::to_string(res.Lat) +
-                      " " + std::to_string(res.Lon) + " " + std::to_string(res.h) + " " +
-                      std::to_string(res.sq) + " " + std::to_string(oneComb.size()) + " " +
-                      data["peakCurrent"].asString();
+  if (config_["OutputFile"].as<bool>() == true) {
+    FILE* fp = fopen(
+        LigTools::GetLocFileName(config_["OutputFilePath"].as<string>(), lig_time).c_str(), "ab");
+    if (fp) {
+      std::string str = CGPSTimeAlgorithm::GetTimeString(lig_time) + " " + std::to_string(res.Lat) +
+                        " " + std::to_string(res.Lon) + " " + std::to_string(res.h) + " " +
+                        std::to_string(res.sq) + " " + std::to_string(oneComb.size()) + " " +
+                        data["peakCurrent"].asString();
 
-    str += " " + data["type"].asString() + " " + data["locationMethod"].asString() + " " +
-           total_names + " " + total_IDs;
+      str += " " + data["type"].asString() + " " + data["locationMethod"].asString() + " " +
+             total_names + " " + total_IDs;
 
-    str += "\r\n";
-    fwrite(str.c_str(), 1, str.length(), fp);
-    fclose(fp);
+      str += "\r\n";
+      fwrite(str.c_str(), 1, str.length(), fp);
+      fclose(fp);
+    }
   }
   // 将Json::Value对象转换为JSON格式的字符串
   Json::StreamWriterBuilder builder;

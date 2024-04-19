@@ -254,9 +254,9 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
               Stadistance(siteMap[oneComb[0].stationID].latitude,
                           siteMap[oneComb[0].stationID].longitude, oneResult.Lat, oneResult.Lon);
 
-          LOG_INFO("Pending-----" << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " "
-                                  << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h
-                                  << " " << oneResult.sq << " " << distanceToBase << endl);
+          //LOG_INFO("Pending-----" << CGPSTimeAlgorithm::GetTimeStr(oneComb[0].time) << " "
+          //                        << oneResult.Lat << " " << oneResult.Lon << " " << oneResult.h
+          //                        << " " << oneResult.sq << " " << distanceToBase << endl);
 
           if (LigTools::check_location_structure(Stations_One, oneResult_rad, checkTheta) &&
               oneResult.sq < ThresSqFinal && (distanceToBase < 4000.0)) {

@@ -102,8 +102,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='release2|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>.\ThirdParty\jsoncpp\include;.\ThirdParty\LigLocCuda3Dx64\include;.\ThirdParty\cpp-httplib;.\include;.\ThirdParty\yaml-cpp\include;.\ThirdParty\pugixml-1.14\src;.\ThirdParty\Ceres\include;.\ThirdParty\glog\src\windows;.\ThirdParty\Eigen;.\ThirdParty\Ceres\win\include;$(IncludePath)</IncludePath>
-    <LibraryPath>.\ThirdParty\jsoncpp\out\build\x64-Debug\lib;.\ThirdParty\LigLocCuda3Dx64\libs;.\ThirdParty\yaml-cpp\lib;.\ThirdParty\Ceres\lib;.\ThirdParty\glog\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>.\ThirdParty\jsoncpp\include;.\ThirdParty\LigLocCuda3Dx64\include;.\ThirdParty\cpp-httplib;.\include;.\ThirdParty\yaml-cpp\include;.\ThirdParty\pugixml-1.14\src;.\ThirdParty\Ceres\include;.\ThirdParty\glog\src\windows;.\ThirdParty\Eigen;.\ThirdParty\Ceres\win\include;.\include\paho.mqtt.c;.\include\paho.mqtt.cpp;$(IncludePath)</IncludePath>
+    <LibraryPath>.\ThirdParty\jsoncpp\out\build\x64-Debug\lib;.\ThirdParty\LigLocCuda3Dx64\libs;.\ThirdParty\yaml-cpp\lib;.\ThirdParty\Ceres\lib;.\ThirdParty\glog\lib;.\ThirdParty\MQTT;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -172,7 +172,7 @@
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>jsoncpp.lib;yaml-cppd.lib;cudart.lib;LigLocCuda3Dx64d.lib;ceres.lib;libglog_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>jsoncpp.lib;yaml-cppd.lib;cudart.lib;LigLocCuda3Dx64d.lib;ceres.lib;libglog_static.lib;paho-mqtt3a-static.lib;paho-mqttpp3-static.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
