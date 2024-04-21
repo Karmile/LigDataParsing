@@ -70,7 +70,7 @@ vector<StationInfo> LigDataApi::GetStationData() {
         }
         // 打印获取的站点信息
         for (const auto& site : sites_) {
-          LOG_INFO("Name: " << site.name <<"  StationID: " << site.stationID << endl);
+          LOG_INFO("Name: " << site.name << "  StationID: " << site.stationID << endl);
         }
         LOG_INFO("Sites info obtained from api:  " << sites_.size() << endl);
       } else {
@@ -95,6 +95,10 @@ void LigDataApi::parse_result(const httplib::Result& res, vector<TriggerInfo>& a
       if (reader.parse(res->body.c_str(), root)) {
         for (const auto& item : root) {
           // 遍历JSON数组并将站点信息存储到结构体中
+          if (item.size() != 10) {
+              LOG_ERROR("Transfer error, item size is not 10... "<< endl);
+              return;
+          }
           TriggerInfo trigger;
           trigger.stationID = stoi(item[7].asString());
           //trigger.Mean = stoi(item[8].asString());
@@ -121,23 +125,33 @@ vector<TriggerInfo> LigDataApi::GetRealTimeTriggerData() {
   //allTriggers_.reserve(1000000);
   httplib::Client client(config_["trigger"]["url_u"].as<string>());
   httplib::Result res;
-  for (int i = 0; i < 6; i++) {
-    if (i < 3) {
-      res = client.Get(config_["trigger"]["api_rt"].as<string>());
+  try {
+    for (int i = 0; i < 6; i++) {
+      if (i < 3) {
+        res = client.Get(config_["trigger"]["api_rt"].as<string>());
 
-    } else {
-      res = httplib::Client(config_["trigger"]["url_j"].as<string>())
-                .Get(config_["trigger"]["api_rt"].as<string>());
-      LOG_WARN("try url_j trigger api!" << endl);
+      } else {
+        res = httplib::Client(config_["trigger"]["url_j"].as<string>())
+                  .Get(config_["trigger"]["api_rt"].as<string>());
+        LOG_WARN("try url_j trigger api!" << endl);
+      }
+      if (res && res->status == 200) {
+        LOG_INFO("Request url successfully!" << endl);
+        break;
+      } else if (res) {
+        LOG_WARN("Request url failed, res status: " << res->status << " Reconnecting: " << i + 1
+                                                    << endl);
+      } else {
+        LOG_WARN("Get res status failed. Reconnecting: " << i + 1 << endl);
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+      }
+      if (i == 5) {
+        return allTriggers_;
+      }
     }
-    if (res && res->status == 200) {
-      break;
-    } else {
-      LOG_WARN("Request url failed. Reconnecting: " << i + 1 << endl);
-      std::this_thread::sleep_for(std::chrono::microseconds(100));
-    }
+  } catch (const std::exception& e) {
+    LOG_ERROR("Get res status failed!" << e.what() << endl);
   }
-
   parse_result(res, allTriggers_);
   sort(allTriggers_.begin(), allTriggers_.end());  // 按照时间排序
   allTriggers_.erase(unique(allTriggers_.begin(), allTriggers_.end()), allTriggers_.end());  // 去重
@@ -175,6 +189,34 @@ vector<TriggerInfo> LigDataApi::GetHistoricalTriggerDataUntill(GPSTime TillTime,
   return allTriggers_;
 }
 
+void LigDataApi::connect() {
+  mqtt::connect_options connOpts;
+  connOpts.set_user_name(username);
+  connOpts.set_password(password);
+  client_.connect(connOpts);
+  LOG_INFO("MQTT client connected!" << endl);
+}
+
+void LigDataApi::disconnect() {
+  if (client_.is_connected()) {
+    client_.disconnect();
+    LOG_INFO("MQTT client disconnect!" << endl);
+  }
+}
+
+void LigDataApi::sendDataViaMQTT(const std::string& data) {
+  try {
+    if (!client_.is_connected()) {
+      connect();
+    }
+    mqtt::message_ptr msg = mqtt::make_message(topic, data);
+    client_.publish(msg);
+    LOG_INFO("MQTT publish message success! " << std::endl);
+  } catch (const mqtt::exception& exc) {
+    LOG_ERROR("MQTT Error: " << exc.what() << std::endl);
+  }
+}
+
 void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
                                const std::vector<TriggerInfo> oneComb,
                                std::unordered_map<int, StationInfo>& siteMap) {
@@ -189,6 +231,7 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
   double min_dis{0.0};
   double F{0.0};
   double residual{0.0};
+  Json::Value infoOfData;
   for (size_t i = 0; i < oneComb.size(); ++i) {
     const auto& iter = oneComb[i];
     const auto& site = siteMap[iter.stationID];
@@ -197,14 +240,13 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
     double dis{
         Stadistance_3D(res.Lat, res.Lon, res.h, site.latitude, site.longitude, site.altitude)};
     residual = (iter.time - lig_time) * cVeo - dis;
-    ss << "{"
-       << "\"id\":" << iter.stationID << ","
-       << "\"name\":\"" << site.name << "\","
-       << "\"value\":" << iter.Value << ","
-       << "\"peakCurrent\":"
-       << "\" \""
-       << ","
-       << "\"residual\":" << residual << "},";
+    Json::Value iter_json;
+    iter_json["id"] = iter.stationID;
+    iter_json["name"] = site.name;
+    iter_json["value"] = iter.Value;
+    iter_json["peakCurrent"] = "";
+    iter_json["residual"] = residual;
+    infoOfData.append(iter_json);
     if (iter.time < min_t && config_["gainCoefficient"][oneComb[i].stationID]) {
       min_t = iter.time;
       min_idx = i;
@@ -212,14 +254,11 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
       min_dis = dis;
     }
   }
-  const auto& min_sta = siteMap[oneComb[min_idx].stationID];
-  total_infos = ss.str();
+
   // 去掉最后一个 "+" 和 ","字符串
   if (!oneComb.empty()) {
     total_IDs = total_IDs.substr(0, total_IDs.size() - 1);
     total_names = total_names.substr(0, total_names.size() - 1);
-    total_infos = total_infos.substr(0, total_infos.size() - 1);
-    total_infos = "[" + total_infos + "]";
   }
 
   Json::Value data;
@@ -236,14 +275,9 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
   data["datetime"] = lig_time.str().replace(0, 2, "20");
   data["nameOfSta"] = total_names;
   data["IDOfSta"] = total_IDs;
-  data["infoOfSta"] = total_infos;
+  data["infoOfSta"] = infoOfData;
   data["isDeleted"] = 0;
   data["locationMethod"] = "TOA";
-
-  // 将Json::Value对象转换为JSON格式的字符串
-  Json::StreamWriterBuilder builder;
-  builder["commentStyle"] = "None";
-  builder["indentation"] = "   ";  // 设置缩进
 
   // Write to .loc file
   FILE* fp = fopen(
@@ -261,7 +295,10 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
     fwrite(str.c_str(), 1, str.length(), fp);
     fclose(fp);
   }
-
+  // 将Json::Value对象转换为JSON格式的字符串
+  Json::StreamWriterBuilder builder;
+  builder["commentStyle"] = "None";
+  builder["indentation"] = "   ";  // 设置缩进
   std::string json_data = Json::writeString(builder, data);
   int max_retries = 3;
   int retry_count = 0;
@@ -276,7 +313,7 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
       break;  // 跳出重试循环
     } else {
       // 请求失败，输出错误信息
-      LOG_WARN("Request failed. result->status: " << result->status << endl);
+      LOG_WARN("Post to database failed. Reconnecting: " << retry_count + 1 << endl);
 
       // 增加重试计数
       retry_count++;
@@ -289,4 +326,6 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
   if (retry_count == max_retries) {
     LOG_ERROR("Max retries reached. Unable to connect to the server." << endl);
   }
+
+  sendDataViaMQTT(json_data);
 }

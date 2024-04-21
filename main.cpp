@@ -28,7 +28,7 @@ int main() {
   if (Logger::Init(file_path)) {
     LOG_INFO("Logger init successfully!" << endl);
   } else {
-    LOG_WARN("Cannot open log file！");
+    LOG_WARN("Cannot open log file!");
   }
   LigDataApi LigDataApi(configFile);
   // sites 不用重复获取，一段时间内获取一次即可
