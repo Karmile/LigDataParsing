@@ -95,6 +95,11 @@ void LigDataApi::parse_result(const httplib::Result& res, vector<TriggerInfo>& a
       if (reader.parse(res->body.c_str(), root)) {
         for (const auto& item : root) {
           // 遍历JSON数组并将站点信息存储到结构体中
+          cout<<item.size()<<endl;
+          if (item.size() != 10) {
+              LOG_ERROR("Transfer error, item size is not 10... "<< endl);
+              return;
+          }
           TriggerInfo trigger;
           trigger.stationID = stoi(item[7].asString());
           //trigger.Mean = stoi(item[8].asString());

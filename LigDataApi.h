@@ -27,8 +27,8 @@ class LigDataApi {
   void LigDataApi::parse_result(const httplib::Result& res, vector<TriggerInfo>& alltriggers);
   static YAML::Node config_;
 };
-const std::string serverURI = "tcp://192.168.0.160:1883";  // MQTT 代理地址
-const std::string clientId = "LDP-165";                    // MQTT 客户端 ID
+const std::string serverURI = "tcp://36.7.72.128:18830";  // MQTT 代理地址
+const std::string clientId = "LDP-Sferic";                    // MQTT 客户端 ID
 const std::string topic = "ltg-beta";                      // MQTT 主题
 const std::string username = "lig_beta";                   // MQTT 代理用户名
 const std::string password = "lig_beta";                   // MQTT 代理密码
