@@ -65,7 +65,8 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
   double checkTheta = config["checkTheta"].as<double>();
   double waitTime = config["waitTime"].as<double>();
   double LocThresholdFinal = config["LocThresholdFinal"].as<double>();
-  GPSTime CurrentProcessingTime = GPSTime();
+  //GPSTime CurrentProcessingTime = GPSTime();
+  GPSTime CurrentProcessingTime(config["CurrentProcessingTime"].as<string>());
 
   ofstream outfile_O;
   if (config["mode"].as<string>() == "reProcess") outfile_O.open("lig_txt/NewData2.txt", ios::out);
