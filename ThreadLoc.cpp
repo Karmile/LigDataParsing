@@ -65,7 +65,8 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
   double checkTheta = config["checkTheta"].as<double>();
   double waitTime = config["waitTime"].as<double>();
   double LocThresholdFinal = config["LocThresholdFinal"].as<double>();
-  GPSTime CurrentProcessingTime = GPSTime();
+  //GPSTime CurrentProcessingTime = GPSTime();
+  GPSTime CurrentProcessingTime(config["CurrentProcessingTime"].as<string>());
 
   ofstream outfile_O;
   if (config["mode"].as<string>() == "reProcess") outfile_O.open("lig_txt/NewData2.txt", ios::out);
@@ -90,7 +91,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
                                                                            << endl);
       std::this_thread::sleep_for(std::chrono::seconds(10));
       if (AccumulatedIdleTime % 600 == 0 && AccumulatedIdleTime != 0) {
-        LigDataApi::sendDataViaMQTT(topic_w, "十分钟未定位闪电数据！");
+        LigDataApi::sendDataViaMQTT(topic_w, "十分钟未定位闪电数据!");
         LOG_WARN(AccumulatedIdleTime << " second without locating lightning data!" << endl);
       }
       AccumulatedIdleTime += 10;
