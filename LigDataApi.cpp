@@ -327,9 +327,12 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
   int retry_count = 0;
   int retry_delay_seconds = 1;
 
+  string token = config_["AccessToken"].as<string>();
+  httplib::Headers headers;
+  headers.insert({"Authorization", token});
   while ((retry_count < max_retries) && (config_["OutputDataBase"].as<bool>() == true)) {
-    auto result =
-        client.Post(config_["ligresult"]["api"].as<string>() + "/1", json_data, "application/json");
+    auto result = client.Post(config_["ligresult"]["api"].as<string>() + "/1", headers, json_data,
+                              "application/json");
 
     if (result && result->status == 200) {
       // 请求成功
