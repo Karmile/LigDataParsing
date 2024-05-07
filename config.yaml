@@ -36,6 +36,7 @@ OutputDataBase: true
 OutputMQTT: true
 OutputFile: true
 CurrentProcessingTime: 20240426T071759
+AccessToken: 9XJhRgFLWrfr0bo2fPFL
 gainCoefficient:
  1 : -0.41  
  2 : -0.524 
