@@ -26,10 +26,12 @@ scatter(lon, lat, 3, sq1, 'filled','y');
 data = load("lig_txt/NewData2.txt");
 lat = data(:,2);
 lon = data(:,3);
+h = data(:,4);
 sq = data(:, 5);
 idx = lat>10&lat<40&lon>100&lon<135;
 lat = lat(idx);
 lon = lon(idx);
+h = h(idx);
 sq2 = sq(idx);
 
 % Plot second data set
