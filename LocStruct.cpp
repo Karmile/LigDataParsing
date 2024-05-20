@@ -186,14 +186,31 @@ LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time) {
     locPara_S.boundS = (result.Lat - 0.064) * PI / 180;
     locPara_S.boundE = (result.Lon + 0.064001) * PI / 180;
     locPara_S.boundN = (result.Lat + 0.064001) * PI / 180;
-    locPara_S.boundht = result.h + 3.2;
-    locPara_S.boundhb = result.h - 3.2;
+    locPara_S.boundht = 20;
+    locPara_S.boundhb = 0;
     if (locPara_S.boundhb < 0) locPara_S.boundhb = 0;
+    if (locPara_S.boundht > 20) locPara_S.boundht = 20;
 
-    locPara_S.dh = 0.1;
+    locPara_S.dh = 0.2;
     LocCuda New_loccuda_Final;
     New_loccuda_Final.GetLocPara(locPara_S, pLocSta, NumOfSta);
     result = New_loccuda_Final.Location3D_GPU(pDiffBe2s, NumOfSta);
+
+
+    locPara_S.Lat = 0.001 * PI / 180;
+    locPara_S.boundW = (result.Lon - 0.064) * PI / 180;
+    locPara_S.boundS = (result.Lat - 0.064) * PI / 180;
+    locPara_S.boundE = (result.Lon + 0.064001) * PI / 180;
+    locPara_S.boundN = (result.Lat + 0.064001) * PI / 180;
+    locPara_S.boundht = result.h + 0.1;
+    locPara_S.boundhb = result.h - 0.1;
+    if (locPara_S.boundhb < 0) locPara_S.boundhb = 0;
+    if (locPara_S.boundht > 20) locPara_S.boundht = 20;
+
+    locPara_S.dh = 0.1;
+    LocCuda New_loccuda_Final_2;
+    New_loccuda_Final_2.GetLocPara(locPara_S, pLocSta, NumOfSta);
+    result = New_loccuda_Final_2.Location3D_GPU(pDiffBe2s, NumOfSta);
   }
 
   int minIndex = 0;

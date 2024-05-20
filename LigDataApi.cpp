@@ -160,6 +160,7 @@ vector<TriggerInfo> LigDataApi::GetRealTimeTriggerData() {
     }
   } catch (const std::exception& e) {
     LOG_ERROR("Get res status failed!" << e.what() << endl);
+    return allTriggers_;
   }
 }
 
@@ -203,6 +204,7 @@ vector<TriggerInfo> LigDataApi::GetHistoricalTriggerDataUntill(GPSTime TillTime,
     }
   } catch (const std::exception& e) {
     LOG_ERROR("Get res status failed!" << e.what() << endl);
+    return allTriggers_;
   }
 }
 

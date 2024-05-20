@@ -13,7 +13,7 @@ ligresult:
   api: "/writeLigResult"
 scale: 20
 waitTime: 90
-mode: reProcess #reProcess   #reProcess #  
+mode: realTime #reProcess   #realTime #  
 reProcess:
   # startTime: 20230807T080300
   # endTime: 20230807T080500
@@ -35,6 +35,7 @@ LogPath: ".\\log\\"
 OutputDataBase: true
 OutputMQTT: true
 OutputFile: true
+CurrentProcessingTime: 20240426T071759
 gainCoefficient:
  1 : -0.41  
  2 : -0.524 
