@@ -35,8 +35,10 @@ LogPath: ".\\log\\"
 OutputDataBase: true
 OutputMQTT: true
 OutputFile: true
+OutputWarningMQTT: true
 CurrentProcessingTime: 20240426T071759
-AccessToken: 9XJhRgFLWrfr0bo2fPFL
+MQTTServerURI: tcp://36.7.72.128:18830
+MQTTClientId: LDP-166         
 gainCoefficient:
  1 : -0.41  
  2 : -0.524 
