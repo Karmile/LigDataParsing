@@ -13,7 +13,7 @@ ligresult:
   api: "/writeLigResult"
 scale: 20
 waitTime: 90
-mode: realTime #reProcess   #realTime #  
+mode: reProcess   #realTime #realTime #  
 reProcess:
   # startTime: 20230807T080300
   # endTime: 20230807T080500
@@ -23,18 +23,18 @@ reProcess:
   # endTime: 20240305T160000
   # startTime: 20240312T000000
   # endTime: 20240313T000000
-  startTime: 20240420T200517
-  endTime: 20240421T023109
+ startTime: 20240519T000000
+ endTime: 20240519T001000
 checkTheta: 0
-expTag: 240317_RT.0.5
+expTag: 240317_RT.0.5_CP0523
 maxBaseLineAsTOA: 0.005 # 1500 km
-LocThresholdInitial: 1.0 # sq par station
+LocThresholdInitial: 3.0 # sq par station
 LocThresholdFinal: 1.1 #sq par station
 OutputFilePath: ".\\lig_txt\\"
 LogPath: ".\\log\\"
 OutputDataBase: true
-OutputMQTT: true
-OutputFile: true
+OutputMQTT: false
+OutputFile: false
 CurrentProcessingTime: 20240426T071759
 gainCoefficient:
  1 : -0.41  

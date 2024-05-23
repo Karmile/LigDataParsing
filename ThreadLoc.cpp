@@ -88,6 +88,29 @@ void ProcessCombinationPool(vector<vector<TriggerInfo>>& locCombinationPool,
   delete[] resultList;
 }
 
+void CalculateRoughResult(vector<TriggerInfo>& locCombinationPool,
+                          ordered_map<int, triggerAtStation>& triggerPool, double& MinSq,
+                            LocSta& result) {
+
+    vector<TriggerInfo>& oneComb = locCombinationPool;
+
+    if (oneComb.size() < 5) {
+      return;
+    }
+    vector<double> Loc_Time_One;
+    vector<LocSta> Stations_One;
+
+    for (int j = 0; j < oneComb.size(); ++j) {
+      Loc_Time_One.emplace_back(oneComb[j].time.m_Sec + oneComb[j].time.m_ActPointSec);
+      Stations_One.emplace_back(triggerPool[oneComb[j].stationID].staLocation);
+    }
+    
+    result = GeoLocation_GPU(Stations_One, Loc_Time_One);
+    MinSq = result.sq;
+  
+  // 查找最小值
+}
+
 void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTriggers,
                unordered_map<int, StationInfo>& siteMap,
                unordered_map<int, unordered_map<int, double>>& siteTimeMap, shared_mutex& rwMutex,
@@ -152,7 +175,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
       ordered_map<int, triggerAtStation> triggerPool;
       TriggerInfo& baseTrig = allTriggers[0];
       //vector<int> recycleIdx;
-
+      
       // 预留网络等待的时间，如果不满足则直接返回
       CurrentProcessingTime = CGPSTimeAlgorithm::AddActPointSec(baseTrig.time, maxBaseLineAsTOA);
       if ((CGPSTimeAlgorithm::ConvertGPSTimeToUnixTime(baseTrig.time) + 8 * 3600) >
@@ -177,7 +200,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
         {
           // 判断键值是否存在
           if (triggerPool.find(trigSiteID) == triggerPool.end()) {
-            if (triggerPool.size() >= 8) continue;  // New stategy, 使用距离最近的8个站点定位
+            if (triggerPool.size() >= 20) continue;  // New stategy, 使用距离最近的8个站点定位
 
             //recycleIdx.push_back(j);
             triggerAtStation oneTriggerAtStation;
@@ -202,7 +225,7 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
       //	 }
       //	 continue;
       //}
-
+      
       if ((triggerPool.size()) >= 5) {
         double MinSq = FLOAT_MAX;
         double ThresSqInitial = LocThresholdInitial;
@@ -216,13 +239,17 @@ void ThreadLoc(deque<TriggerInfo>& allTriggers, deque<TriggerInfo>& transTrigger
           locCombinationPool =
               LigTools::getLocationPool_p(triggerPool, siteTimeMap, triggerPool.size());
           if (locCombinationPool.size() > 0)
-            ProcessCombinationPool(locCombinationPool, triggerPool, MinSq, result, finalCombIdx,
-                                   CountGeoLocationTimes, siteMap);
+            CalculateRoughResult(locCombinationPool[0], triggerPool, MinSq, result);
         }
-
+        LigTools::find_best_space_structure_stations(result, triggerPool, 7);
+          locCombinationPool =
+              LigTools::getLocationPool_p(triggerPool, siteTimeMap, triggerPool.size());
+          if (locCombinationPool.size() > 0)
+            ProcessCombinationPool(locCombinationPool, triggerPool,MinSq, result,finalCombIdx,CountGeoLocationTimes,siteMap);
+        
         for (int i = 0; i < 2; ++i)  //最大站点数为8，最少可信站点数为6，迭代2次
         {
-          if (MinSq > ThresSqInitial && triggerPool.size() > 6) {
+          if (MinSq > ThresSqInitial && triggerPool.size() > 4) {
             if (locCombinationPool.size() > 0) {
               map<int, double> sqMap;
               for (auto& iter : locCombinationPool[finalCombIdx]) {

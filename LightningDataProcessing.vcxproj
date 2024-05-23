@@ -140,7 +140,7 @@
       <AdditionalOptions>/D_HAS_STD_BYTE=0 %(AdditionalOptions)</AdditionalOptions>
       <OpenMPSupport>true</OpenMPSupport>
       <LanguageStandard_C>Default</LanguageStandard_C>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Disabled</Optimization>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>

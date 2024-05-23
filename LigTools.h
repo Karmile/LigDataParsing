@@ -25,4 +25,7 @@ class LigTools {
   static bool check_location_structure(const vector<LocSta>& Stations, LocSta& result,
                                        double checkTheta);
   static string GetLocFileName(string filePath, const GPSTime Time);
+  static void find_best_space_structure_stations(LocSta result,
+                                                 ordered_map<int, triggerAtStation>& triggerPool,
+                                                 int max_stations);
 };

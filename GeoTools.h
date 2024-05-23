@@ -42,9 +42,9 @@ inline double Stadistance_3D(double LatA, double LonA, double AltA, double LatB,
 struct Cartesian {
   Cartesian(double x_, double y_, double z_) : x(x_), y(y_), z(z_){};
   Cartesian(double lan, double lon) {
-    x = cos(lan) * cos(lon);
-    y = cos(lan) * sin(lon);
-    z = sin(lan);
+    x = cos(lan) * cos(lon) * R;
+    y = cos(lan) * sin(lon) * R;
+    z = sin(lan) * R;
   }
   double x;
   double y;

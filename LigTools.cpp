@@ -59,6 +59,47 @@ bool LigTools::check_location_structure(const vector<LocSta> &Stations, LocSta &
   return valid;
 }
 
+void LigTools::find_best_space_structure_stations(LocSta result,
+                                                  ordered_map<int, triggerAtStation> &triggerPool,
+                                                  int max_stations) {
+  if (triggerPool.size() <= max_stations) return;
+  
+  Cartesian O = Cartesian(result.Lat, result.Lon);
+  Cartesian P1 = Cartesian(triggerPool.begin()->second.staLocation.Lat * radians2degree,
+                           triggerPool.begin()->second.staLocation.Lon * radians2degree);
+  vector<pair<int, double>> thetas;
+  double u1{0.0}, u2{0.0}, u3{0.0}, v1{0.0}, v2{0.0}, v3{0.0}, ulength{0.0}, vlength{0.0},
+      dotproduct{0.0}, theta{0.0}, max_theta{0.0};
+  u1 = O.x - P1.x;
+  u2 = O.y - P1.y;
+  u3 = O.z - P1.z;
+  for (auto &station : triggerPool) {
+    Cartesian P2 = Cartesian(station.second.staLocation.Lat * radians2degree,
+                             station.second.staLocation.Lon * radians2degree);
+    v1 = O.x - P2.x;
+    v2 = O.y - P2.y;
+    v3 = O.z - P2.z;
+    ulength = sqrt(u1 * u1 + u2 * u2 + u3 * u3);
+    vlength = sqrt(v1 * v1 + v2 * v2 + v3 * v3);
+    dotproduct = u1 * v1 + u2 * v2 + u3 * v3;
+    theta = acos(dotproduct / (ulength * vlength)) * radians2degree;
+    thetas.push_back(std::make_pair(station.first, theta));
+  }
+  thetas[0].second = 1000;
+  std::sort(thetas.begin(), thetas.end(),
+            [](const auto &a, const auto &b) { return a.second > b.second; });
+  thetas.erase(thetas.begin() + std::min(max_stations, static_cast<int>(triggerPool.size())),
+               thetas.end());
+  for (auto it = triggerPool.begin(); it != triggerPool.end();) {
+    if (std::find_if(thetas.begin(), thetas.end(),
+                     [&](auto key) { return key.first == it->first; }) == thetas.end()) {
+      it = triggerPool.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
 vector<vector<TriggerInfo>> LigTools::getLocationPool(
     ordered_map<int, triggerAtStation> &triggerPool) {
   vector<vector<TriggerInfo>> locCombinationPool;
