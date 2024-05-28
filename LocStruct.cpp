@@ -221,7 +221,7 @@ LocSta GeoLocation_GPU(vector<LocSta> Stations, vector<double> Loc_Time) {
                                                     Stations[minIndex].Lon * radians2degree,
                                                     result.Lat, result.Lon) /
                                             cVeo;
-
+  CalculateGDOP(Stations, result);
   //result.occur_t = 0;
   //for (int i = 0; i < Loc_Time.size(); i++)
   //{
@@ -306,6 +306,7 @@ LocSta GeoLocation_OP(vector<LocSta> Stations, vector<double> Loc_Time, LocSta i
   //std::cout << summary.BriefReport() << std::endl;
   //std::cout << "Estimated parameters: ";
   LocSta result(params[0], params[1], params[2], params[3]);
+  CalculateGDOP(Stations, result);
   result.sq = sqrt(summary.final_cost / Stations.size()) * cVeo;
   result.Lat *= radians2degree;
   result.Lon *= radians2degree;
@@ -428,4 +429,27 @@ LocSta GeoLocation_OP_2(vector<LocSta> Stations, vector<double> Loc_Time, LocSta
                                             cVeo;
 
   return result;
+}
+void CalculateGDOP(const vector<LocSta>& stations, LocSta& result) {
+  int N = stations.size();
+  Eigen::MatrixXd G(N, 4);
+  Cartesian result_O = Cartesian(result.Lat, result.Lon, true);
+  for (int i = 0; i < N; ++i) {
+    Cartesian station = Cartesian(stations[i].Lat, stations[i].Lon, false);
+    double x_i = station.x;
+    double y_i = station.y;
+    double z_i = station.z;
+    double x_0 = result_O.x;
+    double y_0 = result_O.y;
+    double z_0 = result_O.z;
+    double d_i = sqrt(pow(x_i - x_0, 2) + pow(y_i - y_0, 2) + pow(z_i - z_0, 2));
+    G(i, 0) = (x_i - x_0) / d_i;
+    G(i, 1) = (y_i - y_0) / d_i;
+    G(i, 2) = (z_i - z_0) / d_i;
+    G(i, 3) = 1;
+  }
+  Eigen::MatrixXd GT = G.transpose();
+  Eigen::MatrixXd C = (GT * G).inverse();
+  result.confidence = 1000 / (sqrt(C(0, 0) + C(1, 1) + C(2, 2) + C(3, 3)) + 0.1);
+
 }

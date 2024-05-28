@@ -235,7 +235,7 @@ void LigDataApi::sendDataViaMQTT(const std::string& topic, const std::string& da
       }
       mqtt::message_ptr msg = mqtt::make_message(topic, data);
       client_->publish(msg);
-      LOG_INFO("MQTT publish message success! " << std::endl);
+      //LOG_INFO("MQTT publish message success! " << std::endl);
     } catch (const mqtt::exception& exc) {
       LOG_ERROR("MQTT Error: " << exc.what() << std::endl);
     }
@@ -303,6 +303,7 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
   data["infoOfSta"] = infoOfData;
   data["isDeleted"] = 0;
   data["locationMethod"] = "TOA";
+  data["confidence"] = res.confidence;
 
   // Write to .loc file
   if (config_["OutputFile"].as<bool>() == true) {

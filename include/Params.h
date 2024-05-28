@@ -8,6 +8,7 @@
 #define radians2degree 57.32484076433121
 #define cVeo 299792.458  // 299792.458 * 0.998
 #define R 6371.004
+#define e2 0.00669437999014  // 第一偏心率平方,2 * f - f * f
 #define FLOAT_MAX 1000000000000
 #define Lattice 0.001
 #define boundaryW 80.0

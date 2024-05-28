@@ -41,10 +41,16 @@ inline double Stadistance_3D(double LatA, double LonA, double AltA, double LatB,
 
 struct Cartesian {
   Cartesian(double x_, double y_, double z_) : x(x_), y(y_), z(z_){};
-  Cartesian(double lan, double lon) {
-    x = cos(lan) * cos(lon);
-    y = cos(lan) * sin(lon);
-    z = sin(lan);
+  Cartesian(double lan, double lon,bool is_degree, double h = 0){
+    if (is_degree) {
+      lan = degree2radians * lan;
+      lon = degree2radians * lon;
+    }
+    //Reference ellipsoid curvature radius
+    double N = R / sqrt(1 - e2 * sin(lan) * sin(lan));
+    x = cos(lan) * cos(lon) * (N + h);
+    y = cos(lan) * sin(lon) * (N + h);
+    z = sin(lan) * ((1 - e2) * N + h);
   }
   double x;
   double y;
