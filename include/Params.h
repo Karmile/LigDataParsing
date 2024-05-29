@@ -6,12 +6,12 @@
 #define PI 3.1415926535897931
 #define degree2radians 0.017453292519943
 #define radians2degree 57.32484076433121
-#define cVeo 299192.873084  // 299792.458 * 0.998
+#define cVeo 299792.458  // 299792.458 * 0.998
 #define R 6371.004
 #define FLOAT_MAX 1000000000000
 #define Lattice 0.001
-#define boundaryW 95
-#define boundaryE (boundaryW + (4096) * 0.01)
+#define boundaryW 80.0
+#define boundaryE (boundaryW + (6144) * 0.01)
 #define boundaryS 0
 #define boundaryN (boundaryS + (6144) * 0.01)
 

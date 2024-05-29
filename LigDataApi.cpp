@@ -10,10 +10,13 @@
 #include "yaml-cpp/yaml.h"
 
 YAML::Node LigDataApi::config_ = YAML::LoadFile(".\\config.yaml");
+mqtt::client_ptr LigDataApi::client_ = nullptr;
 LigDataApi::LigDataApi(const std::string str) {
   try {
     config_ = YAML::LoadFile(str);
     LOG_INFO("load config successfully!\n" << endl);
+    client_ = std::make_shared<mqtt::client>(config_["MQTTServerURI"].as<string>(),
+                                                    config_["MQTTClientId"].as<string>());
   } catch (const YAML::Exception& e) {
     LOG_ERROR(e.what() << "\n" << endl);
     return;
@@ -96,8 +99,8 @@ void LigDataApi::parse_result(const httplib::Result& res, vector<TriggerInfo>& a
         for (const auto& item : root) {
           // 遍历JSON数组并将站点信息存储到结构体中
           if (item.size() != 10) {
-              LOG_ERROR("Transfer error, item size is not 10... "<< endl);
-              return;
+            LOG_ERROR("Transfer error, item size is not 10... " << endl);
+            return;
           }
           TriggerInfo trigger;
           trigger.stationID = stoi(item[7].asString());
@@ -153,8 +156,7 @@ vector<TriggerInfo> LigDataApi::GetRealTimeTriggerData() {
       }
       if (i == 5) {
         LOG_WARN("Unable to obtain trigger data!" << endl);
-        LigDataApi::sendDataViaMQTT(
-            topic_w, "Max retries reached. Unable to obtain valid trigger from url!");
+        sendDataViaMQTT(topic_w, "Max retries reached. Unable to obtain valid trigger from url!");
         return allTriggers_;
       }
     }
@@ -212,26 +214,28 @@ void LigDataApi::connect() {
   mqtt::connect_options connOpts;
   connOpts.set_user_name(username);
   connOpts.set_password(password);
-  client_.connect(connOpts);
+  client_->connect(connOpts);
   LOG_INFO("MQTT client connected!" << endl);
 }
 
 void LigDataApi::disconnect() {
-  if (client_.is_connected()) {
-    client_.disconnect();
+  if (client_->is_connected()) {
+    client_->disconnect();
     LOG_INFO("MQTT client disconnect!" << endl);
   }
 }
 
 void LigDataApi::sendDataViaMQTT(const std::string& topic, const std::string& data) {
-  if (config_["mode"].as<string>() == "realTime" && config_["OutputMQTT"].as<bool>() == true) {
+  if (config_["mode"].as<string>() == "realTime" &&
+      (topic == "warning/LDP" && (config_["OutputWarningMQTT"].as<bool>() == true) ||
+       (topic == "ltg-beta" && config_["OutputMQTT"].as<bool>() == true))) {
     try {
-      if (!client_.is_connected()) {
+      if (!client_->is_connected()) {
         connect();
       }
       mqtt::message_ptr msg = mqtt::make_message(topic, data);
-      client_.publish(msg);
-      //LOG_INFO("MQTT publish message success! " << std::endl);
+      client_->publish(msg);
+      LOG_INFO("MQTT publish message success! " << std::endl);
     } catch (const mqtt::exception& exc) {
       LOG_ERROR("MQTT Error: " << exc.what() << std::endl);
     }
@@ -351,7 +355,7 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
 
   if (retry_count == max_retries) {
     LOG_ERROR("Max retries reached. Unable to connect to the server!" << endl);
-    LigDataApi::sendDataViaMQTT(topic_w, "Max retries reached. Unable to connect to the server!");
+    sendDataViaMQTT(topic_w, "Max retries reached. Unable to connect to the server!");
   }
 
   sendDataViaMQTT(topic_l, json_data);
