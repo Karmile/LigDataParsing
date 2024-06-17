@@ -252,8 +252,9 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
   std::stringstream ss;
   GPSTime min_t{oneComb[0].time};
   min_t += Duration("00000000T000100");
-  int min_idx{0};
-  double min_dis{0.0};
+  int num{0};
+  double peak{0.0};
+  double peak_i{0.0};
   double F{0.0};
   double residual{0.0};
   Json::Value infoOfData;
@@ -272,11 +273,12 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
     iter_json["peakCurrent"] = "";
     iter_json["residual"] = residual;
     infoOfData.append(iter_json);
-    if (iter.time < min_t && config_["gainCoefficient"][oneComb[i].stationID]) {
-      min_t = iter.time;
-      min_idx = i;
-      F = config_["gainCoefficient"][oneComb[min_idx].stationID].as<double>();
-      min_dis = dis;
+    if (config_["gainCoefficient"][oneComb[i].stationID]) {
+      F = config_["gainCoefficient"][oneComb[i].stationID].as<double>();
+      peak_i = oneComb[i].Value * dis * F;
+      iter_json["peakCurrent"] = peak_i;
+      num++;
+      peak += peak_i;
     }
   }
 
@@ -295,7 +297,7 @@ void LigDataApi::PostLigResult(const GPSTime lig_time, const LocSta res,
   data["altitude"] = res.h;
   data["residual"] = res.sq;
   data["numOfSta"] = oneComb.size();
-  data["peakCurrent"] = oneComb[min_idx].Value * min_dis * F;
+  data["peakCurrent"] = num == 0 ? -10.273651 : peak / num;
   data["type"] = (res.h < 2.0) ? "RS" : "IC";
   data["datetime"] = lig_time.str().replace(0, 2, "20");
   data["nameOfSta"] = total_names;
