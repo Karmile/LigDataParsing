@@ -54,7 +54,7 @@ void threadLoadData(deque<TriggerInfo>& transTriggers, LigDataApi& LigDataApi,
       LOG_INFO("add " << transTriggers.size() - init_size << " new triggers" << endl);
       LOG_INFO("current transTriggers size: " << transTriggers.size() << endl);
 
-      std::this_thread::sleep_for(std::chrono::seconds(60));
+      std::this_thread::sleep_for(std::chrono::seconds(30));
     }
   }
 }
