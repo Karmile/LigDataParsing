@@ -11,6 +11,11 @@ trigger:
 ligresult:
   url: "http://112.26.166.27:18000"
   api: "/writeLigResult"
+
+MQTTServerURI: tcp://36.7.72.128:18830
+MQTTClientId: LDP-166 
+AccessToken: 9XJhRgFLWrfr0bo2fPFL
+
 scale: 20
 waitTime: 90
 mode: realTime #reProcess   #realTime #  
@@ -23,8 +28,8 @@ reProcess:
   # endTime: 20240305T160000
   # startTime: 20240312T000000
   # endTime: 20240313T000000
-  startTime: 20240420T200517
-  endTime: 20240421T023109
+  startTime: 20240527T000000
+  endTime: 20240527T001000
 checkTheta: 0
 expTag: 240317_RT.0.5
 maxBaseLineAsTOA: 0.005 # 1500 km
@@ -36,10 +41,7 @@ OutputDataBase: true
 OutputMQTT: true
 OutputFile: true
 OutputWarningMQTT: true
-CurrentProcessingTime: 20240426T071759
-AccessToken: 9XJhRgFLWrfr0bo2fPFL
-MQTTServerURI: tcp://36.7.72.128:18830
-MQTTClientId: LDP-166         
+CurrentProcessingTime: 20240426T071759        
 gainCoefficient:
  1 : -0.41  
  2 : -0.524 

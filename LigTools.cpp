@@ -30,15 +30,15 @@ string LigTools::GetLocFileName(string filePath, const GPSTime Time) {
 bool LigTools::check_location_structure(const vector<LocSta> &Stations, LocSta &result,
                                         double checkTheta) {
   bool valid{true};
-  Cartesian O = Cartesian(result.Lat, result.Lon);
-  Cartesian P1 = Cartesian(result.Lat, result.Lon);
-  Cartesian P2 = Cartesian(result.Lat, result.Lon);
+  Cartesian O = Cartesian(result.Lat, result.Lon,true);
+  Cartesian P1 = Cartesian(result.Lat, result.Lon, true);
+  Cartesian P2 = Cartesian(result.Lat, result.Lon, true);
   double u1{0.0}, u2{0.0}, u3{0.0}, v1{0.0}, v2{0.0}, v3{0.0}, ulength{0.0}, vlength{0.0},
       dotproduct{0.0}, theta{0.0}, max_theta{0.0};
   for (int i = 0; i < Stations.size() - 1; i++) {
     for (int j = i + 1; j < Stations.size(); j++) {
-      P1 = Cartesian(Stations[i].Lat, Stations[i].Lon);
-      P2 = Cartesian(Stations[j].Lat, Stations[j].Lon);
+      P1 = Cartesian(Stations[i].Lat, Stations[i].Lon, true);
+      P2 = Cartesian(Stations[j].Lat, Stations[j].Lon, true);
       u1 = O.x - P1.x;
       u2 = O.y - P1.y;
       u3 = O.z - P1.z;

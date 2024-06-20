@@ -8,7 +8,7 @@
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #ifndef EIGEN_GENERAL_BLOCK_PANEL_H
-#define EIGEN_GENERAL_BLOCK_PANEL_H
+#define EIGEN_GENERAL_BLOCK_PANEL_Hw
 
 
 namespace Eigen {
@@ -1157,7 +1157,7 @@ struct last_row_process_16_packets<LhsScalar, RhsScalar, Index, DataMapper,  mr,
     typedef typename unpacket_traits<typename unpacket_traits<SRhsPacket>::half>::half SRhsPacketQuarter;
     typedef typename unpacket_traits<typename unpacket_traits<SAccPacket>::half>::half SAccPacketQuarter;
 
-    SResPacketQuarter R = res.template gatherPacket<SResPacketQuarter>(i, j2);
+    SResPacketQuarter R1 = res.template gatherPacket<SResPacketQuarter>(i, j2);
     SResPacketQuarter alphav = pset1<SResPacketQuarter>(alpha);
 
     if (depth - endk > 0)
@@ -1176,13 +1176,13 @@ struct last_row_process_16_packets<LhsScalar, RhsScalar, Index, DataMapper,  mr,
 	    blB += SwappedTraits::LhsProgress/4;
 	    blA += 1;
 	  }
-	straits.acc(c0, alphav, R);
+	straits.acc(c0, alphav, R1);
       }
     else
       {
-	straits.acc(predux_half_dowto4(predux_half_dowto4(C0)), alphav, R);
+	straits.acc(predux_half_dowto4(predux_half_dowto4(C0)), alphav, R1);
       }
-    res.scatterPacket(i, j2, R);
+    res.scatterPacket(i, j2, R1);
   }
 };
 
@@ -1979,7 +1979,7 @@ void gebp_kernel<LhsScalar,RhsScalar,Index,DataMapper,mr,nr,ConjugateLhs,Conjuga
               typedef typename conditional<SwappedTraits::LhsProgress>=8,typename unpacket_traits<SRhsPacket>::half,SRhsPacket>::type SRhsPacketHalf;
               typedef typename conditional<SwappedTraits::LhsProgress>=8,typename unpacket_traits<SAccPacket>::half,SAccPacket>::type SAccPacketHalf;
 
-              SResPacketHalf R = res.template gatherPacket<SResPacketHalf>(i, j2);
+              SResPacketHalf R1 = res.template gatherPacket<SResPacketHalf>(i, j2);
               SResPacketHalf alphav = pset1<SResPacketHalf>(alpha);
 
               if(depth-endk>0)
@@ -1991,13 +1991,13 @@ void gebp_kernel<LhsScalar,RhsScalar,Index,DataMapper,mr,nr,ConjugateLhs,Conjuga
                 straits.loadRhs(blA, b0);
                 SAccPacketHalf c0 = predux_half_dowto4(C0);
                 straits.madd(a0,b0,c0,b0, fix<0>);
-                straits.acc(c0, alphav, R);
+                straits.acc(c0, alphav, R1);
               }
               else
               {
-                straits.acc(predux_half_dowto4(C0), alphav, R);
+                straits.acc(predux_half_dowto4(C0), alphav, R1);
               }
-              res.scatterPacket(i, j2, R);
+              res.scatterPacket(i, j2, R1);
             }
             else if (SwappedTraits::LhsProgress==16)
             {
@@ -2010,10 +2010,10 @@ void gebp_kernel<LhsScalar,RhsScalar,Index,DataMapper,mr,nr,ConjugateLhs,Conjuga
             }
             else
             {
-              SResPacket R = res.template gatherPacket<SResPacket>(i, j2);
+              SResPacket R1 = res.template gatherPacket<SResPacket>(i, j2);
               SResPacket alphav = pset1<SResPacket>(alpha);
-              straits.acc(C0, alphav, R);
-              res.scatterPacket(i, j2, R);
+              straits.acc(C0, alphav, R1);
+              res.scatterPacket(i, j2, R1);
             }
           }
           else // scalar path
